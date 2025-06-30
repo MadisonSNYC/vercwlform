@@ -1,19 +1,13 @@
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Checkbox } from "@/components/ui/checkbox"
-import { submitLead } from "@/lib/actions"
-import { TikTokIcon } from "@/components/icons/tiktok-icon"
-;("use client")
+"use client"
 
 import type React from "react"
 
 import { useState, useEffect, useMemo, startTransition } from "react"
-import { submitFareReport } from "@/lib/actions"
+import { AlertCircle, Building, MapPin, Mail, Calendar, FileText, Shield, Zap } from "lucide-react"
+import { submitFareReport } from "@/lib/actions" // Corrected import
 import { useActionState } from "react"
 import { useLeadValidation } from "@/hooks/use-lead-validation"
+import Image from "next/image"
 
 // Define a comprehensive type for the entire form state
 interface FullFormState {
@@ -603,302 +597,361 @@ export default function NYCFAREReporter() {
   }, [formData])
 
   return (
-    <div className="flex flex-col min-h-screen">
-      <header className="px-4 lg:px-6 h-14 flex items-center">
-        <Link className="flex items-center justify-center" href="#">
-          <MountainIcon className="h-6 w-6" />
-          <span className="sr-only">Acme Inc</span>
-        </Link>
-        <nav className="ml-auto flex gap-4 sm:gap-6">
-          <Link className="text-sm font-medium hover:underline underline-offset-4" href="#">
-            Features
-          </Link>
-          <Link className="text-sm font-medium hover:underline underline-offset-4" href="#">
-            Pricing
-          </Link>
-          <Link className="text-sm font-medium hover:underline underline-offset-4" href="#">
-            About
-          </Link>
-          <Link className="text-sm font-medium hover:underline underline-offset-4" href="#">
-            Contact
-          </Link>
-        </nav>
-      </header>
-      <main className="flex-1">
-        <section className="w-full py-12 sm:py-24 md:py-32 lg:py-48 xl:py-64 bg-gradient-to-r from-[#6366F1] to-[#9333EA] text-white">
-          <div className="container px-4 md:px-6">
-            <div className="grid gap-6 lg:grid-cols-[1fr_400px] lg:gap-12 xl:grid-cols-[1fr_600px]">
-              <div className="flex flex-col justify-center space-y-4">
-                <div className="space-y-2">
-                  <h1 className="text-3xl font-bold tracking-tighter sm:text-5xl xl:text-6xl/none">
-                    Revolutionize Your Workflow
-                  </h1>
-                  <p className="max-w-[600px] text-gray-200 md:text-xl">
-                    Streamline your tasks, boost productivity, and achieve your goals with our cutting-edge SaaS
-                    platform.
-                  </p>
-                </div>
-                <div className="flex flex-col gap-2 min-[400px]:flex-row">
-                  <Button className="inline-flex h-10 items-center justify-center rounded-md bg-white px-8 text-sm font-medium text-[#6366F1] shadow transition-colors hover:bg-gray-100 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gray-950 disabled:pointer-events-none disabled:opacity-50">
-                    Get Started
-                  </Button>
-                  <Button className="inline-flex h-10 items-center justify-center rounded-md border border-white bg-transparent px-8 text-sm font-medium shadow-sm transition-colors hover:bg-white hover:text-[#6366F1] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gray-950 disabled:pointer-events-none disabled:opacity-50">
-                    Learn More
-                  </Button>
-                </div>
+    <div className="min-h-screen bg-gray-50">
+      {/* Navigation */}
+      <nav
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrollY > 50 ? "bg-white/95 backdrop-blur-md shadow-lg" : "bg-white"} border-b border-gray-200`}
+      >
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <div className="flex items-center">
+              <div
+                className={`transition-all duration-300 ${scrollY > 50 ? "w-6 h-6" : "w-8 h-8"} bg-gradient-to-r from-orange-500 to-blue-600 rounded-full flex items-center justify-center`}
+              >
+                <Building className={`${scrollY > 50 ? "w-3 h-3" : "w-4 h-4"} text-white`} />
               </div>
-              <img
-                alt="Hero"
-                className="mx-auto aspect-[3/2] overflow-hidden rounded-xl object-cover lg:order-last lg:aspect-square"
-                height="400"
+              <span className={`ml-2 font-bold transition-all duration-300 ${scrollY > 50 ? "text-lg" : "text-xl"}`}>
+                NYC FARE REPORTER
+              </span>
+            </div>
+            <div className="hidden md:flex space-x-8">
+              <button
+                onClick={() => scrollToSection("hero")}
+                className="text-gray-600 hover:text-orange-500 transition-colors"
+              >
+                Home
+              </button>
+              <button
+                onClick={() => scrollToSection("how-it-works")}
+                className="text-gray-600 hover:text-orange-500 transition-colors"
+              >
+                How It Works
+              </button>
+              <button
+                onClick={() => scrollToSection("madison-story")}
+                className="text-gray-600 hover:text-orange-500 transition-colors"
+              >
+                Madison's Story
+              </button>
+              <button
+                onClick={() => scrollToSection("faq")}
+                className="text-gray-600 hover:text-orange-500 transition-colors"
+              >
+                FAQ
+              </button>
+              <button
+                onClick={() => scrollToSection("support-this-work")}
+                className="text-gray-600 hover:text-orange-500 transition-colors"
+              >
+                Support This Work
+              </button>
+            </div>
+            <button
+              onClick={() => scrollToSection("report-form")}
+              className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-4 py-2 rounded-lg font-semibold hover:from-orange-600 hover:to-orange-700 transition-all duration-300 transform hover:scale-105"
+            >
+              Join Beta
+            </button>
+          </div>
+        </div>
+      </nav>
+
+      {/* Hero Section */}
+      <section id="hero" className="pt-24 pb-8 bg-[#FAFAF8] relative">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
+          <div className="mb-8">
+            <div className="mb-8">
+              <Image
                 src="/hero-image.png"
-                width="600"
+                alt="Renters United - Stop illegal broker fees. Build collective power. AI-enhanced reporting for NYC tenant rights."
+                className="w-full max-w-4xl mx-auto rounded-2xl shadow-lg"
+                width={1000}
+                height={600}
               />
             </div>
           </div>
-        </section>
-        <section className="w-full py-12 md:py-24 lg:py-32 bg-gray-100 dark:bg-gray-800">
-          <div className="container px-4 md:px-6">
-            <div className="flex flex-col items-center justify-center space-y-4 text-center">
-              <div className="space-y-2">
-                <div className="inline-block rounded-lg bg-gray-200 px-3 py-1 text-sm dark:bg-gray-700">
-                  Key Features
+        </div>
+      </section>
+
+      {/* Call to Action Section */}
+      <section className="py-8 bg-[#1F2937]">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <button
+            onClick={() => scrollToSection("report-form")}
+            className="bg-orange-500 text-white px-8 py-4 rounded-full font-semibold text-lg hover:bg-orange-600 transition-all duration-300 transform hover:scale-105 shadow-lg"
+          >
+            BE A TESTER
+          </button>
+        </div>
+      </section>
+
+      {/* About Section */}
+      <section id="about" className="py-16 bg-[#FAFAF8] relative overflow-hidden">
+        <div className="absolute inset-0 opacity-20">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-orange-200 to-transparent rounded-full blur-3xl"></div>
+          <div className="absolute bottom-0 left-0 w-64 h-64 bg-gradient-to-tr from-blue-200 to-transparent rounded-full blur-3xl"></div>
+        </div>
+
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl font-bold text-gray-900 mb-8">Our Mission</h2>
+            <div className="bg-gradient-to-r from-orange-50 via-white to-blue-50 border border-orange-200 shadow-xl p-8 rounded-2xl mb-12">
+              <p className="text-2xl text-gray-800 italic mb-4 font-medium">
+                "To build a public record of misconduct in NYC housing — empowering renters to push back, collectively
+                and confidently."
+              </p>
+              <div className="text-sm text-gray-700 space-y-2">
+                <p className="mb-2">
+                  For questions, feedback, comments, please email:{" "}
+                  <a
+                    href="mailto:farereporter@thenycagent.com"
+                    className="text-orange-600 hover:text-orange-700 underline font-semibold"
+                  >
+                    farereporter@thenycagent.com
+                  </a>
+                </p>
+                <p>
+                  <a
+                    href="https://council.nyc.gov/chi-osse/the-fare-act/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-orange-600 hover:text-orange-700 underline font-semibold"
+                  >
+                    Learn more about the FARE Act here
+                  </a>
+                </p>
+              </div>
+            </div>
+            <div className="bg-blue-50 border border-blue-200 rounded-xl p-8 mt-12">
+              <h4 className="text-2xl font-bold text-gray-900 mb-6">Why NYC FARE Reporter Exists</h4>
+              <p className="text-lg text-blue-800 leading-relaxed">
+                A world where renters have the tools and data to push back against illegal practices. Where violations
+                are tracked publicly, patterns are exposed, and bad actors face real consequences.
+              </p>
+            </div>
+          </div>
+
+          <div className="text-center mb-12 bg-gradient-to-r from-indigo-50 via-purple-50 to-pink-50 p-10 rounded-3xl border border-indigo-200 shadow-lg">
+            <h2 className="text-4xl font-bold text-[#1E3A8A] mb-8">Help Us Test & Launch</h2>
+            <p className="text-xl text-gray-700 mb-8 max-w-3xl mx-auto leading-relaxed">
+              We're days away from launch and need your help testing the system. Join our beta program:
+            </p>
+
+            <div className="grid md:grid-cols-3 gap-8 mb-8">
+              <button
+                onClick={() => {
+                  setFormData((prev) => ({ ...prev, selectedFormType: "report" }))
+                  scrollToSection("report-form")
+                }}
+                className="group p-8 border-2 border-[#FDD8B1] bg-[#FED7AA] rounded-2xl hover:bg-gradient-to-br hover:from-indigo-100 hover:to-purple-100 transition-all duration-300 text-center transform hover:scale-105 shadow-lg hover:shadow-xl"
+              >
+                <div className="w-16 h-16 bg-[#1E3A8A] rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform shadow-lg">
+                  <FileText className="w-8 h-8 text-white" />
                 </div>
-                <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl">Powerful Tools for Your Business</h2>
-                <p className="max-w-[900px] text-gray-500 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed dark:text-gray-400">
-                  Our platform offers a comprehensive suite of features designed to enhance your productivity and
-                  streamline your operations.
+                <div className="text-xl font-bold text-[#1E3A8A] mb-3">Test With Real Report</div>
+                <div className="text-[#1E3A8A]">Have a violation? Help us test by filing it now</div>
+              </button>
+
+              <button
+                onClick={() => {
+                  setFormData((prev) => ({ ...prev, selectedFormType: "schedule" }))
+                  scrollToSection("report-form")
+                }}
+                className="group p-8 border-2 border-blue-300 bg-blue-200 rounded-2xl hover:bg-gradient-to-br hover:from-purple-100 hover:to-pink-100 transition-all duration-300 text-center transform hover:scale-105 shadow-lg hover:shadow-xl"
+              >
+                <div className="w-16 h-16 bg-[#1E3A8A] rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform shadow-lg">
+                  <Calendar className="w-8 h-8 text-white" />
+                </div>
+                <div className="text-xl font-bold text-[#1E3A8A] mb-3">Schedule My Test</div>
+                <div className="text-[#1E3A8A]">We'll reach out to walk you through it</div>
+              </button>
+
+              <button
+                onClick={() => {
+                  setFormData((prev) => ({ ...prev, selectedFormType: "waitlist" }))
+                  scrollToSection("report-form")
+                }}
+                className="group p-8 border-2 border-orange-300 bg-orange-200 rounded-2xl hover:bg-gradient-to-br hover:from-pink-100 hover:to-rose-100 transition-all duration-300 text-center transform hover:scale-105 shadow-lg hover:shadow-xl"
+              >
+                <div className="w-16 h-16 bg-[#1E3A8A] rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform shadow-lg">
+                  <Mail className="w-8 h-8 text-white" />
+                </div>
+                <div className="text-xl font-bold text-[#1E3A8A] mb-3">Just Updates</div>
+                <div className="text-[#1E3A8A]">Get notified when we officially launch</div>
+              </button>
+            </div>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-12 items-center">
+            <div className="relative">
+              <div className="absolute -top-4 -left-4 w-12 h-12 bg-orange-100 rounded-full opacity-50 blur-md"></div>
+              <div className="absolute -bottom-4 -right-4 w-14 h-14 bg-orange-200 rounded-lg opacity-50 blur-md"></div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-6">Why NYC FARE Reporter?</h3>
+              <div className="space-y-4 text-gray-700">
+                <p>
+                  The FARE Act passed, but enforcement feels scattered. Renters still hear "it's standard," "it's part
+                  of rent," or get ghosted when they question illegal fees.
+                </p>
+                <p>
+                  The current reporting process is labyrinthine, emotional, and alienating. Many violations go
+                  unreported because the system feels too complex.
+                </p>
+                <p className="text-lg font-bold text-[#1E3A8A]">
+                  We're changing that. NYC FARE Reporter is a streamlined, AI-assisted toolkit that makes reporting
+                  accessible, effective, and transparent.
                 </p>
               </div>
             </div>
-            <div className="mx-auto grid max-w-5xl items-center gap-6 py-12 lg:grid-cols-2 lg:gap-12">
-              <div className="flex flex-col justify-center space-y-4">
-                <ul className="grid gap-6">
-                  <li>
-                    <div className="grid gap-1">
-                      <h3 className="text-xl font-bold">Intuitive Dashboard</h3>
-                      <p className="text-gray-500 dark:text-gray-400">
-                        Gain a clear overview of your projects and tasks with our user-friendly dashboard.
-                      </p>
-                    </div>
-                  </li>
-                  <li>
-                    <div className="grid gap-1">
-                      <h3 className="text-xl font-bold">Collaborative Tools</h3>
-                      <p className="text-gray-500 dark:text-gray-400">
-                        Work seamlessly with your team members, share files, and communicate effectively.
-                      </p>
-                    </div>
-                  </li>
-                  <li>
-                    <div className="grid gap-1">
-                      <h3 className="text-xl font-bold">Advanced Analytics</h3>
-                      <p className="text-gray-500 dark:text-gray-400">
-                        Track your progress, identify trends, and make data-driven decisions with powerful analytics.
-                      </p>
-                    </div>
-                  </li>
-                </ul>
+            <div className="bg-blue-100 p-8 rounded-lg relative md:border-l md:border-orange-300 md:pl-12">
+              <div className="absolute -top-4 -right-4 w-16 h-16 bg-blue-200 rounded-full opacity-50 blur-md"></div>
+              <div className="absolute -bottom-4 -left-4 w-20 h-20 bg-blue-300 rounded-lg opacity-50 blur-md"></div>
+              <h4 className="font-semibold text-[#1E3A8A] mb-4">What We're Building</h4>
+              <div className="space-y-4 text-gray-700">
+                <div className="flex items-start">
+                  <div className="w-2 h-2 bg-orange-500 rounded-full mt-2 mr-3"></div>
+                  <p>90-second AI-powered complaint form</p>
+                </div>
+                <div className="flex items-start">
+                  <div className="w-2 h-2 bg-orange-500 rounded-full mt-2 mr-3"></div>
+                  <p>Automatic submission to NYC DCWP & NYS DOS</p>
+                </div>
+                <div className="flex items-start">
+                  <div className="w-2 h-2 bg-orange-500 rounded-full mt-2 mr-3"></div>
+                  <p>Public dashboard showing violation patterns</p>
+                </div>
+                <div className="flex items-start">
+                  <div className="w-2 h-2 bg-orange-500 rounded-full mt-2 mr-3"></div>
+                  <p>StreetEasy pricing & inventory tracker</p>
+                </div>
               </div>
-              <img
-                alt="Image"
-                className="mx-auto aspect-video overflow-hidden rounded-xl object-cover object-center sm:w-full lg:order-last"
-                height="310"
-                src="/placeholder.svg"
-                width="550"
-              />
+              <p className="text-sm text-[#1E3A8A] mt-4 italic">
+                Your identity stays private. The violators' behavior becomes public.
+              </p>
             </div>
           </div>
-        </section>
-        <section className="w-full py-12 md:py-24 lg:py-32">
-          <div className="container px-4 md:px-6">
-            <div className="flex flex-col items-center justify-center space-y-4 text-center">
-              <div className="space-y-2">
-                <div className="inline-block rounded-lg bg-gray-100 px-3 py-1 text-sm dark:bg-gray-800">Pricing</div>
-                <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl">Simple, Transparent Pricing</h2>
-                <p className="max-w-[900px] text-gray-500 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed dark:text-gray-400">
-                  Choose the plan that best fits your needs. No hidden fees, no surprises.
-                </p>
+        </div>
+      </section>
+
+      {/* How It Works Section */}
+      <section id="how-it-works" className="py-20 bg-[#FAFAF8] relative overflow-hidden">
+        <div className="absolute top-10 left-1/4 w-24 h-24 bg-orange-100 rounded-full opacity-30 blur-xl z-0"></div>
+        <div className="absolute bottom-20 right-1/4 w-20 h-20 bg-blue-100 rounded-lg opacity-30 blur-xl z-0 rotate-45"></div>
+        <div className="absolute top-1/3 right-10 w-16 h-16 bg-orange-200 rounded-full opacity-30 blur-xl z-0"></div>
+        <div className="absolute bottom-10 left-10 w-12 h-12 bg-blue-200 rounded-full opacity-30 blur-xl z-0"></div>
+
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold text-[#1E3A8A] mb-6">How It Works</h2>
+            <p className="text-xl text-gray-600">File your FARE Act violation report in under 90 seconds</p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8 mb-16">
+            <div className="group bg-white/80 backdrop-blur-sm p-10 rounded-xl border-2 border-orange-200 shadow-md text-center hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
+              <div className="w-20 h-20 bg-gradient-to-r from-orange-500 to-orange-600 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform shadow-lg">
+                <MapPin className="w-10 h-10 text-white" />
               </div>
+              <h3 className="text-2xl font-bold mb-6 text-gray-900">1. Paste Your Listing</h3>
+              <p className="text-gray-600 text-lg leading-relaxed">
+                Drop in a StreetEasy link. We automatically extract address, price, agent, brokerage, and fee info.
+              </p>
             </div>
-            <div className="mx-auto grid max-w-sm items-start gap-8 sm:max-w-4xl sm:grid-cols-2 md:gap-12 lg:max-w-5xl lg:grid-cols-3 py-12">
-              <Card className="flex flex-col justify-between">
-                <CardHeader>
-                  <CardTitle className="text-xl font-bold">Starter</CardTitle>
-                  <p className="text-gray-500 dark:text-gray-400">Perfect for individuals</p>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="text-4xl font-bold">$19</div>
-                  <p className="text-gray-500 dark:text-gray-400">per month</p>
-                  <ul className="text-sm text-gray-500 dark:text-gray-400 space-y-2">
-                    <li>
-                      <CheckIcon className="mr-2 inline-block h-4 w-4 text-green-500" />
-                      10 Projects
-                    </li>
-                    <li>
-                      <CheckIcon className="mr-2 inline-block h-4 w-4 text-green-500" />5 GB Storage
-                    </li>
-                    <li>
-                      <CheckIcon className="mr-2 inline-block h-4 w-4 text-green-500" />
-                      Basic Support
-                    </li>
-                  </ul>
-                  <Button className="w-full">Choose Plan</Button>
-                </CardContent>
-              </Card>
-              <Card className="flex flex-col justify-between">
-                <CardHeader>
-                  <CardTitle className="text-xl font-bold">Pro</CardTitle>
-                  <p className="text-gray-500 dark:text-gray-400">For growing teams</p>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="text-4xl font-bold">$49</div>
-                  <p className="text-gray-500 dark:text-gray-400">per month</p>
-                  <ul className="text-sm text-gray-500 dark:text-gray-400 space-y-2">
-                    <li>
-                      <CheckIcon className="mr-2 inline-block h-4 w-4 text-green-500" />
-                      Unlimited Projects
-                    </li>
-                    <li>
-                      <CheckIcon className="mr-2 inline-block h-4 w-4 text-green-500" />
-                      50 GB Storage
-                    </li>
-                    <li>
-                      <CheckIcon className="mr-2 inline-block h-4 w-4 text-green-500" />
-                      Priority Support
-                    </li>
-                  </ul>
-                  <Button className="w-full">Choose Plan</Button>
-                </CardContent>
-              </Card>
-              <Card className="flex flex-col justify-between">
-                <CardHeader>
-                  <CardTitle className="text-xl font-bold">Enterprise</CardTitle>
-                  <p className="text-gray-500 dark:text-gray-400">Custom solutions for large organizations</p>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="text-4xl font-bold">Contact Us</div>
-                  <p className="text-gray-500 dark:text-gray-400">for custom pricing</p>
-                  <ul className="text-sm text-gray-500 dark:text-gray-400 space-y-2">
-                    <li>
-                      <CheckIcon className="mr-2 inline-block h-4 w-4 text-green-500" />
-                      Unlimited Everything
-                    </li>
-                    <li>
-                      <CheckIcon className="mr-2 inline-block h-4 w-4 text-green-500" />
-                      Dedicated Support
-                    </li>
-                    <li>
-                      <CheckIcon className="mr-2 inline-block h-4 w-4 text-green-500" />
-                      Custom Integrations
-                    </li>
-                  </ul>
-                  <Button className="w-full">Contact Sales</Button>
-                </CardContent>
-              </Card>
+
+            <div className="group bg-white/80 backdrop-blur-sm p-10 rounded-xl border-2 border-blue-200 shadow-md text-center hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
+              <div className="w-20 h-20 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform shadow-lg">
+                <AlertCircle className="w-10 h-10 text-white" />
+              </div>
+              <h3 className="text-2xl font-bold mb-6 text-gray-900">2. Check What Happened</h3>
+              <p className="text-gray-600 text-lg leading-relaxed">
+                Select violations from our comprehensive list—even things you might not know were illegal.
+              </p>
+            </div>
+
+            <div className="group bg-white/80 backdrop-blur-sm p-10 rounded-xl border-2 border-orange-200 shadow-md text-center hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
+              <div className="w-20 h-20 bg-[#1E3A8A] rounded-full flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform shadow-lg">
+                <FileText className="w-10 h-10 text-white" />
+              </div>
+              <h3 className="text-2xl font-bold mb-6 text-gray-900">3. AI Drafts & Submits</h3>
+              <p className="text-gray-600 text-lg leading-relaxed">
+                Our AI helps perfect your complaint narrative. We send it to authorities—you get CC'd on everything.
+              </p>
             </div>
           </div>
-        </section>
-        <section className="w-full py-12 md:py-24 lg:py-32 bg-gray-100 dark:bg-gray-800">
-          <div className="container px-4 md:px-6">
-            <div className="flex flex-col items-center justify-center space-y-4 text-center">
-              <div className="space-y-2">
-                <div className="inline-block rounded-lg bg-gray-200 px-3 py-1 text-sm dark:bg-gray-700">Contact Us</div>
-                <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl">Get in Touch</h2>
-                <p className="max-w-[900px] text-gray-500 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed dark:text-gray-400">
-                  Have questions or want to learn more? Reach out to us!
-                </p>
+
+          <div className="grid md:grid-cols-3 gap-8">
+            <div className="group bg-gradient-to-br from-orange-50 to-orange-100 backdrop-blur p-8 rounded-3xl border-2 border-orange-200 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 text-center relative">
+              <div
+                className="absolute inset-0"
+                style={{
+                  backgroundImage: `radial-gradient(circle at 50% 50%, rgba(255, 165, 0, 0.05) 1px, transparent 1px)`,
+                  backgroundSize: "20px 20px",
+                }}
+              ></div>
+              <div className="flex items-center justify-center mb-6">
+                <div className="w-16 h-16 bg-gradient-to-r from-orange-500 to-orange-600 rounded-full flex items-center justify-center mr-4 group-hover:scale-110 transition-transform shadow-lg">
+                  <Zap className="w-8 h-8 text-white" />
+                </div>
               </div>
-              <Card className="w-full max-w-md">
-                <CardHeader>
-                  <CardTitle>Join Our Waitlist</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <form action={submitLead} className="space-y-4">
-                    <input type="hidden" name="formType" value="waitlist" />
-                    <div>
-                      <Label htmlFor="firstName">First Name</Label>
-                      <Input id="firstName" name="firstName" placeholder="Enter your first name" required />
-                    </div>
-                    <div>
-                      <Label htmlFor="lastName">Last Name</Label>
-                      <Input id="lastName" name="lastName" placeholder="Enter your last name" required />
-                    </div>
-                    <div>
-                      <Label htmlFor="email">Email</Label>
-                      <Input id="email" name="email" type="email" placeholder="Enter your email" required />
-                    </div>
-                    <div>
-                      <Label htmlFor="phone">Phone (Optional)</Label>
-                      <Input id="phone" name="phone" type="tel" placeholder="Enter your phone number" />
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Checkbox id="mailingListConsent" name="mailingListConsent" />
-                      <Label htmlFor="mailingListConsent">I agree to receive marketing emails from Acme Inc.</Label>
-                    </div>
-                    <Button type="submit" className="w-full">
-                      Join Waitlist
-                    </Button>
-                  </form>
-                </CardContent>
-              </Card>
+              <h4 className="text-2xl font-bold text-orange-900 mb-4">AI-Enhanced Drafting</h4>
+              <p className="text-orange-800 text-lg leading-relaxed">
+                Rewrites complaints with clarity and legal precision
+              </p>
+              <div className="mt-6 pt-4 border-t border-orange-300">
+                <div className="inline-block bg-orange-200 text-orange-900 px-4 py-2 rounded-full text-sm font-semibold">
+                  ⚡ Powered by AI
+                </div>
+              </div>
+            </div>
+
+            <div className="group bg-gradient-to-br from-blue-50 to-blue-100 backdrop-blur p-8 rounded-3xl border-2 border-blue-200 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 text-center relative">
+              <div
+                className="absolute inset-0"
+                style={{
+                  backgroundImage: `radial-gradient(circle at 50% 50%, rgba(59, 130, 246, 0.05) 1px, transparent 1px)`,
+                  backgroundSize: "20px 20px",
+                }}
+              ></div>
+              <div className="flex items-center justify-center mb-6">
+                <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center mr-4 group-hover:scale-110 transition-transform shadow-lg">
+                  <Shield className="w-8 h-8 text-white" />
+                </div>
+              </div>
+              <h4 className="text-2xl font-bold text-blue-900 mb-4">Direct Government Filing</h4>
+              <p className="text-blue-800 text-lg leading-relaxed">
+                Reports go straight to NYC DCWP and NYS Department of State
+              </p>
+              <div className="mt-6 pt-4 border-t border-blue-300">
+                <div className="inline-block bg-blue-200 text-blue-900 px-4 py-2 rounded-full text-sm font-semibold">
+                  🏛️ Official Channels
+                </div>
+              </div>
+            </div>
+
+            <div className="group bg-[#FED7AA] backdrop-blur p-8 rounded-3xl border-2 border-purple-200 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 text-center relative">
+              <div
+                className="absolute inset-0"
+                style={{
+                  backgroundImage: `radial-gradient(circle at 50% 50%, rgba(254, 215, 170, 0.05) 1px, transparent 1px)`,
+                  backgroundSize: "20px 20px",
+                }}
+              ></div>
+              <div className="flex items-center justify-center mb-6">
+                <div className="w-16 h-16 bg-[#1E3A8A] rounded-full flex items-center justify-center mr-4 group-hover:scale-110 transition-transform shadow-lg">
+                  <Building className="w-8 h-8 text-white" />
+                </div>
+              </div>
+              <h4 className="text-2xl font-bold text-[#1E3A8A] mb-4">Public Accountability</h4>
+              <p className="text-[#1E3A8A] text-lg leading-relaxed">
+                Anonymous data builds NYC's first public violation database
+              </p>
+              <div className="mt-6 pt-4 border-t border-purple-300">
+                <div className="inline-block bg-purple-200 text-purple-900 px-4 py-2 rounded-full text-sm font-semibold">
+                  📈 Public Accountability
+                </div>
+              </div>
             </div>
           </div>
-        </section>
-      </main>
-      <footer className="flex flex-col gap-2 sm:flex-row py-6 w-full shrink-0 items-center px-4 md:px-6 border-t">
-        <p className="text-xs text-gray-500 dark:text-gray-400">© 2023 Acme Inc. All rights reserved.</p>
-        <nav className="sm:ml-auto flex gap-4 sm:gap-6">
-          <Link className="text-xs hover:underline underline-offset-4" href="#">
-            Terms of Service
-          </Link>
-          <Link className="text-xs hover:underline underline-offset-4" href="#">
-            Privacy
-          </Link>
-          <Link className="text-xs hover:underline underline-offset-4" href="#">
-            <TikTokIcon className="h-4 w-4" />
-            <span className="sr-only">TikTok</span>
-          </Link>
-        </nav>
-      </footer>
+        </div>
+      </section>
     </div>
-  )
-}
-
-function CheckIcon(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M20 6 9 17l-5-5" />
-    </svg>
-  )
-}
-
-function MountainIcon(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="m8 3 4 8 5-5 5 15H2L8 3z" />
-    </svg>
   )
 }
