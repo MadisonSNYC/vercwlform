@@ -109,16 +109,22 @@ CREATE INDEX IF NOT EXISTS idx_reports_fee_charges ON reports USING GIN(fee_char
 ALTER TABLE leads ENABLE ROW LEVEL SECURITY;
 ALTER TABLE reports ENABLE ROW LEVEL SECURITY;
 
+-- Drop existing policies if they exist to allow recreation
+DROP POLICY IF EXISTS "Allow public inserts on leads" ON leads;
+DROP POLICY IF EXISTS "Allow authenticated reads on leads" ON leads;
+DROP POLICY IF EXISTS "Allow public inserts on reports" ON reports;
+DROP POLICY IF EXISTS "Allow authenticated reads on reports" ON reports;
+
 -- Create policies to allow inserts (you may want to adjust these based on your auth setup)
-CREATE POLICY IF NOT EXISTS "Allow public inserts on leads" ON leads
+CREATE POLICY "Allow public inserts on leads" ON leads
   FOR INSERT WITH CHECK (true);
 
-CREATE POLICY IF NOT EXISTS "Allow public inserts on reports" ON reports
+CREATE POLICY "Allow public inserts on reports" ON reports
   FOR INSERT WITH CHECK (true);
 
 -- Create policies to allow reads for authenticated users (adjust as needed)
-CREATE POLICY IF NOT EXISTS "Allow authenticated reads on leads" ON leads
+CREATE POLICY "Allow authenticated reads on leads" ON leads
   FOR SELECT USING (auth.role() = 'authenticated');
 
-CREATE POLICY IF NOT EXISTS "Allow authenticated reads on reports" ON reports
+CREATE POLICY "Allow authenticated reads on reports" ON reports
   FOR SELECT USING (auth.role() = 'authenticated');

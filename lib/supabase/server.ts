@@ -1,44 +1,31 @@
-import { createServerClient, type CookieOptions } from "@supabase/ssr"
+import { createServerClient } from "@supabase/ssr"
 import { cookies } from "next/headers"
 import { cache } from "react"
 
 export const createClient = cache(() => {
   const cookieStore = cookies()
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-  if (!supabaseUrl) {
-    throw new Error("Missing environment variable: NEXT_PUBLIC_SUPABASE_URL")
-  }
-  if (!supabaseAnonKey) {
-    throw new Error("Missing environment variable: NEXT_PUBLIC_SUPABASE_ANON_KEY")
-  }
-
-  return createServerClient(supabaseUrl, supabaseAnonKey, {
+  return createServerClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, {
     cookies: {
       get(name: string) {
         return cookieStore.get(name)?.value
       },
-      set(name: string, value: string, options: CookieOptions) {
+      set(name: string, value: string, options: any) {
         try {
           cookieStore.set({ name, value, ...options })
         } catch (error) {
-          // The `cookies().set()` method can only be called from a Server Component or Server Action.
-          // This error is typically not an issue if you're using a client component that relies on
-          // cookies.set() but is rendered on the server with a `use client` directive.
-          // For example, if you have a logout button in a client component and you want to clear
-          // the cookie on click, you would use `cookies().set()` in a Server Action called by the client component.
+          // The `set` method was called from a Server Component.
+          // This can be ignored if you have middleware refreshing
+          // user sessions.
         }
       },
-      remove(name: string, options: CookieOptions) {
+      remove(name: string, options: any) {
         try {
           cookieStore.set({ name, value: "", ...options })
         } catch (error) {
-          // The `cookies().set()` method can only be called from a Server Component or Server Action.
-          // This error is typically not an issue if you're using a client component that relies on
-          // cookies.set() but is rendered on the server with a `use client` directive.
-          // For example, if you have a logout button in a client component and you want to clear
-          // the cookie on click, you would use `cookies().set()` in a Server Action called by the client component.
+          // The `delete` method was called from a Server Component.
+          // This can be ignored if you have middleware refreshing
+          // user sessions.
         }
       },
     },

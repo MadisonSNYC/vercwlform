@@ -1,177 +1,229 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
-import { redirect } from "next/navigation"
-import { headers } from "next/headers"
-
 import { createClient } from "@/lib/supabase/server"
+import { z } from "zod"
 
-export async function signIn(formData: FormData) {
-  const email = formData.get("email") as string
-  const password = formData.get("password") as string
+// Define Zod schema for the report form data
+const reportSchema = z.object({
+  firstName: z.string().min(1, "First name is required"),
+  lastName: z.string().min(1, "Last name is required"),
+  email: z.string().email("Invalid email address"),
+  phone: z.string().optional(),
+  preferredContact: z.string().optional(),
+  isVeteran: z.boolean().optional(),
+  hasStreeteasyListing: z.boolean().optional(),
+  streeteasyLink: z.string().optional(),
+  manualAddress: z.string().optional(),
+  manualPrice: z.string().optional(),
+  manualUnit: z.string().optional(),
+  manualBedrooms: z.string().optional(),
+  manualBathrooms: z.string().optional(),
+  borough: z.string().optional(),
+  neighborhood: z.string().optional(),
+  landlordName: z.string().optional(),
+  landlordCompany: z.string().optional(),
+  brokerName: z.string().optional(),
+  brokerCompany: z.string().optional(),
+  brokerageName: z.string().optional(),
+  businessAddress: z.string().optional(),
+  contactedBusiness: z.boolean().optional(),
+  employeeName: z.string().optional(),
+  whatHappened: z.string().optional(),
+  outcome: z.string().optional(),
+  violations: z.array(z.string()).optional(),
+  violationOthers: z.record(z.string(), z.string()).optional(), // Assuming key-value pairs for other violations
+  illegalBrokerFeeCharged: z.boolean().optional(),
+  requirementToUseBroker: z.boolean().optional(),
+  feesNotDisclosed: z.boolean().optional(),
+  feesNotDisclosedText: z.string().optional(),
+  improperFeesInAd: z.boolean().optional(),
+  improperFeesInAdUrl: z.string().optional(),
+  feeCharges: z.array(z.string()).optional(),
+  feeChargesOther: z.string().optional(),
+  narrative: z.string().optional(),
+  additionalContext: z.string().optional(),
+  desiredOutcomeArray: z.array(z.string()).optional(),
+  desiredOutcomeOther: z.string().optional(),
+  aiRefinementOption: z.string().optional(),
+  reportDescription: z.string().optional(),
+  referralSource: z.string().optional(),
+  referralSourceOther: z.string().optional(),
+  dcwpConsent: z.boolean().optional(),
+  proxyConsent: z.boolean().optional(),
+  mailingListConsent: z.boolean().optional(),
+  documentInfo: z.record(z.string(), z.any()).optional(), // Flexible for document metadata
+})
+
+export async function submitFareReport(formData: FormData) {
   const supabase = createClient()
 
-  const { error } = await supabase.auth.signInWithPassword({
+  // Convert FormData to a plain object
+  const data = Object.fromEntries(formData.entries())
+
+  // Handle checkbox values (they are only present if checked)
+  const processedData = {
+    ...data,
+    isVeteran: data.isVeteran === "on",
+    hasStreeteasyListing: data.hasStreeteasyListing === "on",
+    contactedBusiness: data.contactedBusiness === "on",
+    illegalBrokerFeeCharged: data.illegalBrokerFeeCharged === "on",
+    requirementToUseBroker: data.requirementToUseBroker === "on",
+    feesNotDisclosed: data.feesNotDisclosed === "on",
+    improperFeesInAd: data.improperFeesInAd === "on",
+    dcwpConsent: data.dcwpConsent === "on",
+    proxyConsent: data.proxyConsent === "on",
+    mailingListConsent: data.mailingListConsent === "on",
+    // Convert array-like fields from comma-separated strings if necessary, or handle multiple inputs
+    violations: formData.getAll("violations"), // Use getAll for multiple checkboxes/selects
+    feeCharges: formData.getAll("feeCharges"),
+    desiredOutcomeArray: formData.getAll("desiredOutcomeArray"),
+  }
+
+  // Parse and validate the data using Zod
+  const parsed = reportSchema.safeParse(processedData)
+
+  if (!parsed.success) {
+    console.error("Validation Error:", parsed.error.flatten())
+    return { success: false, error: parsed.error.flatten().fieldErrors }
+  }
+
+  const {
+    firstName,
+    lastName,
     email,
-    password,
-  })
+    phone,
+    preferredContact,
+    isVeteran,
+    hasStreeteasyListing,
+    streeteasyLink,
+    manualAddress,
+    manualPrice,
+    manualUnit,
+    manualBedrooms,
+    manualBathrooms,
+    borough,
+    neighborhood,
+    landlordName,
+    landlordCompany,
+    brokerName,
+    brokerCompany,
+    brokerageName,
+    businessAddress,
+    contactedBusiness,
+    employeeName,
+    whatHappened,
+    outcome,
+    violations,
+    violationOthers,
+    illegalBrokerFeeCharged,
+    requirementToUseBroker,
+    feesNotDisclosed,
+    feesNotDisclosedText,
+    improperFeesInAd,
+    improperFeesInAdUrl,
+    feeCharges,
+    feeChargesOther,
+    narrative,
+    additionalContext,
+    desiredOutcomeArray,
+    desiredOutcomeOther,
+    aiRefinementOption,
+    reportDescription,
+    referralSource,
+    referralSourceOther,
+    dcwpConsent,
+    proxyConsent,
+    mailingListConsent,
+    documentInfo,
+  } = parsed.data
 
-  if (error) {
-    return redirect("/login?message=Could not authenticate user")
-  }
-
-  return redirect("/protected")
-}
-
-export async function signUp(formData: FormData) {
-  const origin = headers().get("origin")
-  const email = formData.get("email") as string
-  const password = formData.get("password") as string
-  const supabase = createClient()
-
-  const { error } = await supabase.auth.signUp({
+  const { error } = await supabase.from("reports").insert({
+    first_name: firstName,
+    last_name: lastName,
     email,
-    password,
-    options: {
-      emailRedirectTo: `${origin}/auth/callback`,
-    },
+    phone,
+    preferred_contact: preferredContact,
+    is_veteran: isVeteran,
+    has_streeteasy_listing: hasStreeteasyListing,
+    streeteasy_link: streeteasyLink,
+    manual_address: manualAddress,
+    manual_price: manualPrice,
+    manual_unit: manualUnit,
+    manual_bedrooms: manualBedrooms,
+    manual_bathrooms: manualBathrooms,
+    borough,
+    neighborhood,
+    landlord_name: landlordName,
+    landlord_company: landlordCompany,
+    broker_name: brokerName,
+    broker_company: brokerCompany,
+    brokerage_name: brokerageName,
+    business_address: businessAddress,
+    contacted_business: contactedBusiness,
+    employee_name: employeeName,
+    what_happened: whatHappened,
+    outcome,
+    violations: violations ? JSON.stringify(violations) : null,
+    violation_others: violationOthers ? JSON.stringify(violationOthers) : null,
+    illegal_broker_fee_charged: illegalBrokerFeeCharged,
+    requirement_to_use_broker: requirementToUseBroker,
+    fees_not_disclosed: feesNotDisclosed,
+    fees_not_disclosed_text: feesNotDisclosedText,
+    improper_fees_in_ad: improperFeesInAd,
+    improper_fees_in_ad_url: improperFeesInAdUrl,
+    fee_charges: feeCharges ? JSON.stringify(feeCharges) : null,
+    fee_charges_other: feeChargesOther,
+    narrative,
+    additional_context: additionalContext,
+    desired_outcome_array: desiredOutcomeArray ? JSON.stringify(desiredOutcomeArray) : null,
+    desired_outcome_other: desiredOutcomeOther,
+    ai_refinement_option: aiRefinementOption,
+    report_description: reportDescription,
+    referral_source: referralSource,
+    referral_source_other: referralSourceOther,
+    dcwp_consent: dcwpConsent,
+    proxy_consent: proxyConsent,
+    mailing_list_consent: mailingListConsent,
+    document_info: documentInfo ? JSON.stringify(documentInfo) : null,
   })
-
-  if (error) {
-    return redirect("/login?message=Could not authenticate user")
-  }
-
-  return redirect("/login?message=Check email to continue sign in process")
-}
-
-export async function signOut() {
-  const supabase = createClient()
-  await supabase.auth.signOut()
-  return redirect("/login")
-}
-
-export async function submitLeadForm(formData: FormData) {
-  const supabase = createClient()
-
-  const formType = formData.get("form_type") as string
-  const email = formData.get("email") as string
-  const firstName = formData.get("first_name") as string
-  const lastName = formData.get("last_name") as string
-  const phone = formData.get("phone") as string
-  const contactTime = formData.get("contact_time") as string
-  const issueSnapshot = formData.get("issue_snapshot") as string
-  const mailingListConsent = formData.get("mailing_list_consent") === "on"
-
-  const { data, error } = await supabase.from("leads").insert([
-    {
-      form_type: formType,
-      email,
-      first_name: firstName,
-      last_name: lastName,
-      phone,
-      contact_time: contactTime,
-      issue_snapshot: issueSnapshot,
-      mailing_list_consent: mailingListConsent,
-    },
-  ])
-
-  if (error) {
-    console.error("Error submitting lead form:", error)
-    return { success: false, message: "Failed to submit form. Please try again." }
-  }
-
-  revalidatePath("/")
-  return { success: true, message: "Form submitted successfully!" }
-}
-
-export async function submitFareReport(prevState: any, formData: FormData) {
-  const supabase = createClient()
-
-  const reportData = {
-    first_name: formData.get("first_name") as string,
-    last_name: formData.get("last_name") as string,
-    email: formData.get("email") as string,
-    phone: formData.get("phone") as string,
-    preferred_contact: formData.get("preferred_contact") as string,
-    is_veteran: formData.get("is_veteran") === "on",
-
-    has_streeteasy_listing: formData.get("has_streeteasy_listing") === "on",
-    streeteasy_link: formData.get("streeteasy_link") as string,
-    manual_address: formData.get("manual_address") as string,
-    manual_price: formData.get("manual_price") as string,
-    manual_unit: formData.get("manual_unit") as string,
-    manual_bedrooms: formData.get("manual_bedrooms") as string,
-    manual_bathrooms: formData.get("manual_bathrooms") as string,
-    borough: formData.get("borough") as string,
-    neighborhood: formData.get("neighborhood") as string,
-
-    landlord_name: formData.get("landlord_name") as string,
-    landlord_company: formData.get("landlord_company") as string,
-    broker_name: formData.get("broker_name") as string,
-    broker_company: formData.get("broker_company") as string,
-    brokerage_name: formData.get("brokerage_name") as string,
-    business_address: formData.get("business_address") as string,
-
-    contacted_business: formData.get("contacted_business") === "on",
-    employee_name: formData.get("employee_name") as string,
-    what_happened: formData.get("what_happened") as string,
-    outcome: formData.get("outcome") as string,
-
-    violations: JSON.parse((formData.get("violations") as string) || "[]"),
-    violation_others: JSON.parse((formData.get("violation_others") as string) || "[]"),
-
-    illegal_broker_fee_charged: formData.get("illegal_broker_fee_charged") === "on",
-    requirement_to_use_broker: formData.get("requirement_to_use_broker") === "on",
-    fees_not_disclosed: formData.get("fees_not_disclosed") === "on",
-    fees_not_disclosed_text: formData.get("fees_not_disclosed_text") as string,
-    improper_fees_in_ad: formData.get("improper_fees_in_ad") === "on",
-    improper_fees_in_ad_url: formData.get("improper_fees_in_ad_url") as string,
-
-    fee_charges: JSON.parse((formData.get("fee_charges") as string) || "[]"),
-    fee_charges_other: formData.get("fee_charges_other") as string,
-
-    narrative: formData.get("narrative") as string,
-    additional_context: formData.get("additional_context") as string,
-    desired_outcome_array: JSON.parse((formData.get("desired_outcome_array") as string) || "[]"),
-    desired_outcome_other: formData.get("desired_outcome_other") as string,
-
-    ai_refinement_option: formData.get("ai_refinement_option") as string,
-    report_description: formData.get("report_description") as string,
-
-    referral_source: formData.get("referral_source") as string,
-    referral_source_other: formData.get("referral_source_other") as string,
-
-    dcwp_consent: formData.get("dcwp_consent") === "on",
-    proxy_consent: formData.get("proxy_consent") === "on",
-    mailing_list_consent: formData.get("mailing_list_consent") === "on",
-
-    document_info: JSON.parse((formData.get("document_info") as string) || "[]"),
-  }
-
-  const { data, error } = await supabase.from("reports").insert([reportData])
 
   if (error) {
     console.error("Error submitting report form:", error)
-    return { success: false, message: "Failed to submit report. Please try again." }
+    return { success: false, error: error.message }
   }
 
-  revalidatePath("/")
+  revalidatePath("/integration-test") // Revalidate the page to show new data
   return { success: true, message: "Report submitted successfully!" }
 }
 
-export async function testDatabaseConnection() {
+export async function submitLead(formData: FormData) {
   const supabase = createClient()
-  try {
-    const { data, error } = await supabase.from("reports").select("id").limit(1)
+  const email = formData.get("email") as string
+  const firstName = formData.get("firstName") as string
+  const lastName = formData.get("lastName") as string
+  const phone = formData.get("phone") as string
+  const formType = formData.get("formType") as string // 'waitlist', 'schedule', 'report'
+  const contactTime = formData.get("contactTime") as string
+  const issueSnapshot = formData.get("issueSnapshot") as string
+  const mailingListConsent = formData.get("mailingListConsent") === "on"
 
-    if (error) {
-      console.error("Supabase connection test failed:", error)
-      return { success: false, message: `Connection failed: ${error.message}` }
-    }
+  const { error } = await supabase.from("leads").insert({
+    email,
+    first_name: firstName,
+    last_name: lastName,
+    phone,
+    form_type: formType,
+    contact_time: contactTime,
+    issue_snapshot: issueSnapshot,
+    mailing_list_consent: mailingListConsent,
+  })
 
-    return { success: true, message: "Supabase connection successful!" }
-  } catch (e: any) {
-    console.error("Supabase connection test failed (exception):", e)
-    return { success: false, message: `Connection failed: ${e.message}` }
+  if (error) {
+    console.error("Error submitting lead:", error)
+    return { success: false, error: error.message }
   }
+
+  revalidatePath("/")
+  return { success: true, message: "Lead submitted successfully!" }
 }

@@ -14,8 +14,9 @@ export function TikTokIcon(props: React.SVGProps<SVGSVGElement>) {
       strokeLinecap="round"
       strokeLinejoin="round"
     >
-      <path d="M21 8V5h-3a2 2 0 0 0-2 2v1.5a.5.5 0 0 1-1 0V7a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h3a2 2 0 0 0 2-2v-1.5a.5.5 0 0 1 1 0V19a2 2 0 0 0 2 2h3v-3" />
-      <path d="M16 17v-5a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2Z" />
+      <path d="M21 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h4" />
+      <path d="M15 16V9c0-2.8 2-5 5-5" />
+      <path d="M9 12v5c0 2.8-2 5-5 5" />
     </svg>
   )
 }
