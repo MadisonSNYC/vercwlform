@@ -1,13 +1,23 @@
 "use client"
 
-import type React from "react"
+import { useMemo } from "react"
 
-import { useState, useEffect, useMemo, startTransition } from "react"
-import { AlertCircle, Building, MapPin, Mail, Calendar, FileText, Shield, Zap } from "lucide-react"
-import { submitFareReport } from "@/lib/actions" // Corrected import
+import { useEffect } from "react"
+
+import { useState } from "react"
+
+import type React from "react"
+import Link from "next/link"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { submitFareReport, submitLeadForm } from "@/lib/actions" // Corrected import
 import { useActionState } from "react"
 import { useLeadValidation } from "@/hooks/use-lead-validation"
 import Image from "next/image"
+import { TikTokIcon } from "@/components/icons/tiktok-icon" // Ensure this import is correct
+import { CheckIcon } from "@/components/icons/check-icon"
+import { AlertCircle, Building, MapPin, Mail, Calendar, FileText, Shield, Zap } from "lucide-react"
+import { startTransition } from "react"
 
 // Define a comprehensive type for the entire form state
 interface FullFormState {
@@ -952,6 +962,116 @@ export default function NYCFAREReporter() {
           </div>
         </div>
       </section>
+
+      {/* Report Form Section */}
+      <section id="report-form" className="py-12 md:py-24 lg:py-32 bg-gray-100 dark:bg-gray-800">
+        <div className="container px-4 md:px-6">
+          <div className="grid gap-6 lg:grid-cols-[1fr_400px] lg:gap-12 xl:grid-cols-[1fr_600px]">
+            <div className="flex flex-col justify-center space-y-4">
+              <div className="space-y-2">
+                <div className="inline-block rounded-lg bg-gray-200 px-3 py-1 text-sm dark:bg-gray-700">
+                  Key Features
+                </div>
+                <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl">Powerful Tools for Every Need</h2>
+                <p className="max-w-[600px] text-gray-500 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed dark:text-gray-400">
+                  Our platform offers a comprehensive suite of features designed to enhance your productivity and
+                  streamline your operations.
+                </p>
+              </div>
+              <ul className="grid gap-2 py-4">
+                <li>
+                  <CheckIcon className="mr-2 inline-block h-4 w-4 text-green-500" />
+                  Intuitive Dashboard
+                </li>
+                <li>
+                  <CheckIcon className="mr-2 inline-block h-4 w-4 text-green-500" />
+                  Advanced Analytics
+                </li>
+                <li>
+                  <CheckIcon className="mr-2 inline-block h-4 w-4 text-green-500" />
+                  Seamless Integrations
+                </li>
+              </ul>
+              <div className="flex flex-col gap-2 min-[400px]:flex-row">
+                <Link
+                  className="inline-flex h-10 items-center justify-center rounded-md bg-[#6366F1] px-8 text-sm font-medium text-gray-50 shadow transition-colors hover:bg-[#5048E5] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gray-950 disabled:pointer-events-none disabled:opacity-50 dark:bg-gray-50 dark:text-gray-900 dark:hover:bg-gray-50/90 dark:focus-visible:ring-gray-300"
+                  href="#"
+                >
+                  Get Started
+                </Link>
+                <Link
+                  className="inline-flex h-10 items-center justify-center rounded-md border border-gray-200 bg-white px-8 text-sm font-medium shadow-sm transition-colors hover:bg-gray-100 hover:text-gray-900 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gray-950 disabled:pointer-events-none disabled:opacity-50 dark:border-gray-800 dark:bg-gray-950 dark:hover:bg-gray-800 dark:hover:text-gray-50 dark:focus-visible:ring-gray-300"
+                  href="#"
+                >
+                  Learn More
+                </Link>
+              </div>
+            </div>
+            <img
+              alt="Image"
+              className="mx-auto aspect-video overflow-hidden rounded-xl object-cover sm:w-full lg:order-last lg:aspect-square"
+              height="400"
+              src="/placeholder.svg"
+              width="600"
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* Waitlist Section */}
+      <section className="w-full py-12 md:py-24 lg:py-32">
+        <div className="container grid items-center justify-center gap-4 px-4 text-center md:px-6">
+          <div className="space-y-3">
+            <h2 className="text-3xl font-bold tracking-tighter md:text-4xl/tight">Join Our Waitlist</h2>
+            <p className="mx-auto max-w-[600px] text-gray-500 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed dark:text-gray-400">
+              Be the first to know when we launch. Sign up for early access and exclusive updates.
+            </p>
+          </div>
+          <div className="mx-auto w-full max-w-sm space-y-2">
+            <form action={submitLeadForm} className="flex space-x-2">
+              <input type="hidden" name="form_type" value="waitlist" />
+              <Input
+                className="max-w-lg flex-1"
+                placeholder="Enter your first name"
+                type="text"
+                name="first_name"
+                required
+              />
+              <Input
+                className="max-w-lg flex-1"
+                placeholder="Enter your last name"
+                type="text"
+                name="last_name"
+                required
+              />
+              <Input className="max-w-lg flex-1" placeholder="Enter your email" type="email" name="email" required />
+              <Button type="submit">Join Waitlist</Button>
+            </form>
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              Sign up to receive updates and news.
+              <Link className="underline underline-offset-2" href="#">
+                Terms & Conditions
+              </Link>
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Footer Section */}
+      <footer className="flex flex-col gap-2 sm:flex-row py-6 w-full shrink-0 items-center px-4 md:px-6 border-t">
+        <p className="text-xs text-gray-500 dark:text-gray-400">© 2024 Acme Inc. All rights reserved.</p>
+        <nav className="sm:ml-auto flex gap-4 sm:gap-6">
+          <Link className="text-xs hover:underline underline-offset-4" href="#">
+            Terms of Service
+          </Link>
+          <Link className="text-xs hover:underline underline-offset-4" href="#">
+            Privacy
+          </Link>
+          <Link className="text-xs hover:underline underline-offset-4" href="#">
+            <TikTokIcon className="h-4 w-4 inline-block mr-1" /> TikTok
+          </Link>
+        </nav>
+      </footer>
     </div>
   )
 }

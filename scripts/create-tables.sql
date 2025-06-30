@@ -1,96 +1,96 @@
 -- Create the leads table (renamed from waitlist)
 CREATE TABLE IF NOT EXISTS leads (
-id BIGSERIAL PRIMARY KEY,
-email TEXT NOT NULL,
-first_name TEXT NOT NULL,
-last_name TEXT NOT NULL,
-phone TEXT,
-form_type TEXT NOT NULL DEFAULT 'waitlist' CHECK (form_type IN ('waitlist', 'schedule', 'report')),
-contact_time TEXT,
-issue_snapshot TEXT,
-mailing_list_consent BOOLEAN DEFAULT FALSE,
-created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+  id BIGSERIAL PRIMARY KEY,
+  email TEXT NOT NULL,
+  first_name TEXT NOT NULL,
+  last_name TEXT NOT NULL,
+  phone TEXT,
+  form_type TEXT NOT NULL DEFAULT 'waitlist' CHECK (form_type IN ('waitlist', 'schedule', 'report')),
+  contact_time TEXT,
+  issue_snapshot TEXT,
+  mailing_list_consent BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
 -- Create the reports table with all necessary columns
 CREATE TABLE IF NOT EXISTS reports (
-id BIGSERIAL PRIMARY KEY,
+  id BIGSERIAL PRIMARY KEY,
 
--- Personal Information
-first_name TEXT NOT NULL,
-last_name TEXT NOT NULL,
-email TEXT NOT NULL,
-phone TEXT,
-preferred_contact TEXT,
-is_veteran BOOLEAN DEFAULT FALSE,
+  -- Personal Information
+  first_name TEXT NOT NULL,
+  last_name TEXT NOT NULL,
+  email TEXT NOT NULL,
+  phone TEXT,
+  preferred_contact TEXT,
+  is_veteran BOOLEAN DEFAULT FALSE,
 
--- Property Information
-has_streeteasy_listing BOOLEAN DEFAULT FALSE,
-streeteasy_link TEXT,
-manual_address TEXT,
-manual_price TEXT,
-manual_unit TEXT,
-manual_bedrooms TEXT,
-manual_bathrooms TEXT,
-borough TEXT,
-neighborhood TEXT,
+  -- Property Information
+  has_streeteasy_listing BOOLEAN DEFAULT FALSE,
+  streeteasy_link TEXT,
+  manual_address TEXT,
+  manual_price TEXT,
+  manual_unit TEXT,
+  manual_bedrooms TEXT,
+  manual_bathrooms TEXT,
+  borough TEXT,
+  neighborhood TEXT,
 
--- Business Information
-landlord_name TEXT,
-landlord_company TEXT,
-broker_name TEXT,
-broker_company TEXT,
-brokerage_name TEXT,
-business_address TEXT,
+  -- Business Information
+  landlord_name TEXT,
+  landlord_company TEXT,
+  broker_name TEXT,
+  broker_company TEXT,
+  brokerage_name TEXT,
+  business_address TEXT,
 
--- Contact Information
-contacted_business BOOLEAN DEFAULT FALSE,
-employee_name TEXT,
-what_happened TEXT,
-outcome TEXT,
+  -- Contact Information
+  contacted_business BOOLEAN DEFAULT FALSE,
+  employee_name TEXT,
+  what_happened TEXT,
+  outcome TEXT,
 
--- Violations
-violations JSONB,
-violation_others JSONB,
+  -- Violations
+  violations JSONB,
+  violation_others JSONB,
 
--- DCWP Fee Details
-illegal_broker_fee_charged BOOLEAN,
-requirement_to_use_broker BOOLEAN,
-fees_not_disclosed BOOLEAN,
-fees_not_disclosed_text TEXT,
-improper_fees_in_ad BOOLEAN,
-improper_fees_in_ad_url TEXT,
+  -- DCWP Fee Details
+  illegal_broker_fee_charged BOOLEAN,
+  requirement_to_use_broker BOOLEAN,
+  fees_not_disclosed BOOLEAN,
+  fees_not_disclosed_text TEXT,
+  improper_fees_in_ad BOOLEAN,
+  improper_fees_in_ad_url TEXT,
 
--- Fee charges
-fee_charges JSONB,
-fee_charges_other TEXT,
+  -- Fee charges
+  fee_charges JSONB,
+  fee_charges_other TEXT,
 
--- Report Details
-narrative TEXT,
-additional_context TEXT,
-desired_outcome_array JSONB,
-desired_outcome_other TEXT,
+  -- Report Details
+  narrative TEXT,
+  additional_context TEXT,
+  desired_outcome_array JSONB,
+  desired_outcome_other TEXT,
 
--- AI Enhancement
-ai_refinement_option TEXT,
-report_description TEXT,
+  -- AI Enhancement
+  ai_refinement_option TEXT,
+  report_description TEXT,
 
--- Referral
-referral_source TEXT,
-referral_source_other TEXT,
+  -- Referral
+  referral_source TEXT,
+  referral_source_other TEXT,
 
--- Consents
-dcwp_consent BOOLEAN DEFAULT FALSE,
-proxy_consent BOOLEAN DEFAULT FALSE,
-mailing_list_consent BOOLEAN DEFAULT FALSE,
+  -- Consents
+  dcwp_consent BOOLEAN DEFAULT FALSE,
+  proxy_consent BOOLEAN DEFAULT FALSE,
+  mailing_list_consent BOOLEAN DEFAULT FALSE,
 
--- Document metadata
-document_info JSONB,
+  -- Document metadata
+  document_info JSONB,
 
--- Timestamps
-created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+  -- Timestamps
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
 -- Create indexes for better performance

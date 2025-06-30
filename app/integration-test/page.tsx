@@ -1,51 +1,70 @@
 "use client"
 
-import type React from "react"
-
-import { useState } from "react"
-import { submitFareReport } from "@/lib/actions"
+import { useState, useEffect } from "react"
+import { submitFareReport, testDatabaseConnection } from "@/lib/actions"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { useFormState, useFormStatus } from "react-dom"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
+function SubmitButton() {
+  const { pending } = useFormStatus()
+
+  return (
+    <Button type="submit" disabled={pending}>
+      {pending ? "Submitting..." : "Submit Report"}
+    </Button>
+  )
+}
+
 export default function IntegrationTestPage() {
-  const [response, setResponse] = useState<any>(null)
-  const [loading, setLoading] = useState(false)
+  const [state, formAction] = useFormState(submitFareReport, {
+    success: false,
+    message: "",
+  })
+  const [dbStatus, setDbStatus] = useState({ success: false, message: "Testing connection..." })
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
-    setLoading(true)
-    setResponse(null)
-
-    const formData = new FormData(event.currentTarget)
-    const result = await submitFareReport(formData)
-    setResponse(result)
-    setLoading(false)
-  }
+  useEffect(() => {
+    async function checkDb() {
+      const status = await testDatabaseConnection()
+      setDbStatus(status)
+    }
+    checkDb()
+  }, [])
 
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-3xl font-bold mb-6">Integration Test Form</h1>
-      <Card className="w-full max-w-2xl mx-auto">
+      <h1 className="text-3xl font-bold mb-6">Integration Test Page</h1>
+
+      <Card className="mb-6">
         <CardHeader>
-          <CardTitle>Submit Fare Report</CardTitle>
+          <CardTitle>Database Connection Status</CardTitle>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <p className={`font-semibold ${dbStatus.success ? "text-green-600" : "text-red-600"}`}>{dbStatus.message}</p>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Submit Fare Report Form</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form action={formAction} className="space-y-6">
             {/* Personal Information */}
-            <h2 className="text-xl font-semibold mt-6 mb-2">Personal Information</h2>
+            <h2 className="text-xl font-semibold mt-4 mb-2">Personal Information</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="firstName">First Name</Label>
-                <Input id="firstName" name="firstName" required />
+                <Label htmlFor="first_name">First Name</Label>
+                <Input id="first_name" name="first_name" required />
               </div>
               <div>
-                <Label htmlFor="lastName">Last Name</Label>
-                <Input id="lastName" name="lastName" required />
+                <Label htmlFor="last_name">Last Name</Label>
+                <Input id="last_name" name="last_name" required />
               </div>
               <div>
                 <Label htmlFor="email">Email</Label>
@@ -56,8 +75,8 @@ export default function IntegrationTestPage() {
                 <Input id="phone" name="phone" type="tel" />
               </div>
               <div>
-                <Label htmlFor="preferredContact">Preferred Contact</Label>
-                <Select name="preferredContact">
+                <Label htmlFor="preferred_contact">Preferred Contact Method</Label>
+                <Select name="preferred_contact">
                   <SelectTrigger>
                     <SelectValue placeholder="Select contact method" />
                   </SelectTrigger>
@@ -68,42 +87,42 @@ export default function IntegrationTestPage() {
                 </Select>
               </div>
               <div className="flex items-center space-x-2">
-                <Checkbox id="isVeteran" name="isVeteran" />
-                <Label htmlFor="isVeteran">Are you a veteran?</Label>
+                <Checkbox id="is_veteran" name="is_veteran" />
+                <Label htmlFor="is_veteran">Are you a veteran?</Label>
               </div>
             </div>
 
             {/* Property Information */}
-            <h2 className="text-xl font-semibold mt-6 mb-2">Property Information</h2>
+            <h2 className="text-xl font-semibold mt-4 mb-2">Property Information</h2>
             <div className="space-y-4">
               <div className="flex items-center space-x-2">
-                <Checkbox id="hasStreeteasyListing" name="hasStreeteasyListing" />
-                <Label htmlFor="hasStreeteasyListing">Do you have a StreetEasy listing?</Label>
+                <Checkbox id="has_streeteasy_listing" name="has_streeteasy_listing" />
+                <Label htmlFor="has_streeteasy_listing">Do you have a StreetEasy listing?</Label>
               </div>
               <div>
-                <Label htmlFor="streeteasyLink">StreetEasy Link</Label>
-                <Input id="streeteasyLink" name="streeteasyLink" type="url" />
+                <Label htmlFor="streeteasy_link">StreetEasy Link</Label>
+                <Input id="streeteasy_link" name="streeteasy_link" type="url" />
               </div>
               <div>
-                <Label htmlFor="manualAddress">Manual Address</Label>
-                <Input id="manualAddress" name="manualAddress" />
+                <Label htmlFor="manual_address">Manual Address</Label>
+                <Input id="manual_address" name="manual_address" />
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="manualPrice">Manual Price</Label>
-                  <Input id="manualPrice" name="manualPrice" />
+                  <Label htmlFor="manual_price">Price</Label>
+                  <Input id="manual_price" name="manual_price" />
                 </div>
                 <div>
-                  <Label htmlFor="manualUnit">Manual Unit</Label>
-                  <Input id="manualUnit" name="manualUnit" />
+                  <Label htmlFor="manual_unit">Unit</Label>
+                  <Input id="manual_unit" name="manual_unit" />
                 </div>
                 <div>
-                  <Label htmlFor="manualBedrooms">Manual Bedrooms</Label>
-                  <Input id="manualBedrooms" name="manualBedrooms" />
+                  <Label htmlFor="manual_bedrooms">Bedrooms</Label>
+                  <Input id="manual_bedrooms" name="manual_bedrooms" />
                 </div>
                 <div>
-                  <Label htmlFor="manualBathrooms">Manual Bathrooms</Label>
-                  <Input id="manualBathrooms" name="manualBathrooms" />
+                  <Label htmlFor="manual_bathrooms">Bathrooms</Label>
+                  <Input id="manual_bathrooms" name="manual_bathrooms" />
                 </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -119,48 +138,48 @@ export default function IntegrationTestPage() {
             </div>
 
             {/* Business Information */}
-            <h2 className="text-xl font-semibold mt-6 mb-2">Business Information</h2>
-            <div className="space-y-4">
+            <h2 className="text-xl font-semibold mt-4 mb-2">Business Information</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="landlordName">Landlord Name</Label>
-                <Input id="landlordName" name="landlordName" />
+                <Label htmlFor="landlord_name">Landlord Name</Label>
+                <Input id="landlord_name" name="landlord_name" />
               </div>
               <div>
-                <Label htmlFor="landlordCompany">Landlord Company</Label>
-                <Input id="landlordCompany" name="landlordCompany" />
+                <Label htmlFor="landlord_company">Landlord Company</Label>
+                <Input id="landlord_company" name="landlord_company" />
               </div>
               <div>
-                <Label htmlFor="brokerName">Broker Name</Label>
-                <Input id="brokerName" name="brokerName" />
+                <Label htmlFor="broker_name">Broker Name</Label>
+                <Input id="broker_name" name="broker_name" />
               </div>
               <div>
-                <Label htmlFor="brokerCompany">Broker Company</Label>
-                <Input id="brokerCompany" name="brokerCompany" />
+                <Label htmlFor="broker_company">Broker Company</Label>
+                <Input id="broker_company" name="broker_company" />
               </div>
               <div>
-                <Label htmlFor="brokerageName">Brokerage Name</Label>
-                <Input id="brokerageName" name="brokerageName" />
+                <Label htmlFor="brokerage_name">Brokerage Name</Label>
+                <Input id="brokerage_name" name="brokerage_name" />
               </div>
               <div>
-                <Label htmlFor="businessAddress">Business Address</Label>
-                <Input id="businessAddress" name="businessAddress" />
+                <Label htmlFor="business_address">Business Address</Label>
+                <Input id="business_address" name="business_address" />
               </div>
             </div>
 
             {/* Contact Information */}
-            <h2 className="text-xl font-semibold mt-6 mb-2">Contact Information</h2>
+            <h2 className="text-xl font-semibold mt-4 mb-2">Contact Information</h2>
             <div className="space-y-4">
               <div className="flex items-center space-x-2">
-                <Checkbox id="contactedBusiness" name="contactedBusiness" />
-                <Label htmlFor="contactedBusiness">Have you contacted the business?</Label>
+                <Checkbox id="contacted_business" name="contacted_business" />
+                <Label htmlFor="contacted_business">Have you contacted the business?</Label>
               </div>
               <div>
-                <Label htmlFor="employeeName">Employee Name</Label>
-                <Input id="employeeName" name="employeeName" />
+                <Label htmlFor="employee_name">Employee Name (if applicable)</Label>
+                <Input id="employee_name" name="employee_name" />
               </div>
               <div>
-                <Label htmlFor="whatHappened">What Happened?</Label>
-                <Textarea id="whatHappened" name="whatHappened" />
+                <Label htmlFor="what_happened">What happened?</Label>
+                <Textarea id="what_happened" name="what_happened" />
               </div>
               <div>
                 <Label htmlFor="outcome">Desired Outcome from Contact</Label>
@@ -169,124 +188,107 @@ export default function IntegrationTestPage() {
             </div>
 
             {/* Violations */}
-            <h2 className="text-xl font-semibold mt-6 mb-2">Violations</h2>
+            <h2 className="text-xl font-semibold mt-4 mb-2">Violations</h2>
             <div className="space-y-2">
               <Label>Select all applicable violations:</Label>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                 <div className="flex items-center space-x-2">
-                  <Checkbox id="violation1" name="violations" value="Illegal Broker Fee" />
-                  <Label htmlFor="violation1">Illegal Broker Fee</Label>
+                  <Checkbox id="violation_1" name="violations" value="Violation 1" />
+                  <Label htmlFor="violation_1">Violation 1</Label>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <Checkbox id="violation2" name="violations" value="Discrimination" />
-                  <Label htmlFor="violation2">Discrimination</Label>
+                  <Checkbox id="violation_2" name="violations" value="Violation 2" />
+                  <Label htmlFor="violation_2">Violation 2</Label>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <Checkbox id="violation3" name="violations" value="Harassment" />
-                  <Label htmlFor="violation3">Harassment</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Checkbox id="violation4" name="violations" value="Unsafe Conditions" />
-                  <Label htmlFor="violation4">Unsafe Conditions</Label>
+                  <Checkbox id="violation_3" name="violations" value="Violation 3" />
+                  <Label htmlFor="violation_3">Violation 3</Label>
                 </div>
               </div>
               <div>
-                <Label htmlFor="violationOthers">Other Violations (JSON format, e.g., {'key": "value'})</Label>
-                <Textarea id="violationOthers" name="violationOthers" placeholder='{"other_violation": "details"}' />
+                <Label htmlFor="violation_others">Other Violations (JSON format, e.g., {'key": "value'})</Label>
+                <Input id="violation_others" name="violation_others" defaultValue="{}" />
               </div>
             </div>
 
             {/* DCWP Fee Details */}
-            <h2 className="text-xl font-semibold mt-6 mb-2">DCWP Fee Details</h2>
+            <h2 className="text-xl font-semibold mt-4 mb-2">DCWP Fee Details</h2>
             <div className="space-y-4">
               <div className="flex items-center space-x-2">
-                <Checkbox id="illegalBrokerFeeCharged" name="illegalBrokerFeeCharged" />
-                <Label htmlFor="illegalBrokerFeeCharged">Illegal broker fee charged?</Label>
+                <Checkbox id="illegal_broker_fee_charged" name="illegal_broker_fee_charged" />
+                <Label htmlFor="illegal_broker_fee_charged">Illegal broker fee charged?</Label>
               </div>
               <div className="flex items-center space-x-2">
-                <Checkbox id="requirementToUseBroker" name="requirementToUseBroker" />
-                <Label htmlFor="requirementToUseBroker">Requirement to use a specific broker?</Label>
+                <Checkbox id="requirement_to_use_broker" name="requirement_to_use_broker" />
+                <Label htmlFor="requirement_to_use_broker">Requirement to use broker?</Label>
               </div>
               <div className="flex items-center space-x-2">
-                <Checkbox id="feesNotDisclosed" name="feesNotDisclosed" />
-                <Label htmlFor="feesNotDisclosed">Fees not disclosed?</Label>
+                <Checkbox id="fees_not_disclosed" name="fees_not_disclosed" />
+                <Label htmlFor="fees_not_disclosed">Fees not disclosed?</Label>
               </div>
               <div>
-                <Label htmlFor="feesNotDisclosedText">Details on undisclosed fees</Label>
-                <Textarea id="feesNotDisclosedText" name="feesNotDisclosedText" />
+                <Label htmlFor="fees_not_disclosed_text">Fees not disclosed details</Label>
+                <Input id="fees_not_disclosed_text" name="fees_not_disclosed_text" />
               </div>
               <div className="flex items-center space-x-2">
-                <Checkbox id="improperFeesInAd" name="improperFeesInAd" />
-                <Label htmlFor="improperFeesInAd">Improper fees in advertisement?</Label>
+                <Checkbox id="improper_fees_in_ad" name="improper_fees_in_ad" />
+                <Label htmlFor="improper_fees_in_ad">Improper fees in ad?</Label>
               </div>
               <div>
-                <Label htmlFor="improperFeesInAdUrl">URL of advertisement with improper fees</Label>
-                <Input id="improperFeesInAdUrl" name="improperFeesInAdUrl" type="url" />
+                <Label htmlFor="improper_fees_in_ad_url">Improper fees in ad URL</Label>
+                <Input id="improper_fees_in_ad_url" name="improper_fees_in_ad_url" type="url" />
               </div>
             </div>
 
             {/* Fee Charges */}
-            <h2 className="text-xl font-semibold mt-6 mb-2">Fee Charges</h2>
+            <h2 className="text-xl font-semibold mt-4 mb-2">Fee Charges</h2>
             <div className="space-y-2">
               <Label>Select all applicable fee charges:</Label>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                 <div className="flex items-center space-x-2">
-                  <Checkbox id="feeCharge1" name="feeCharges" value="Application Fee" />
-                  <Label htmlFor="feeCharge1">Application Fee</Label>
+                  <Checkbox id="fee_charge_1" name="fee_charges" value="Fee Charge 1" />
+                  <Label htmlFor="fee_charge_1">Fee Charge 1</Label>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <Checkbox id="feeCharge2" name="feeCharges" value="Broker Fee" />
-                  <Label htmlFor="feeCharge2">Broker Fee</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Checkbox id="feeCharge3" name="feeCharges" value="Credit Check Fee" />
-                  <Label htmlFor="feeCharge3">Credit Check Fee</Label>
+                  <Checkbox id="fee_charge_2" name="fee_charges" value="Fee Charge 2" />
+                  <Label htmlFor="fee_charge_2">Fee Charge 2</Label>
                 </div>
               </div>
               <div>
-                <Label htmlFor="feeChargesOther">Other Fee Charges</Label>
-                <Input id="feeChargesOther" name="feeChargesOther" />
+                <Label htmlFor="fee_charges_other">Other Fee Charges</Label>
+                <Input id="fee_charges_other" name="fee_charges_other" />
               </div>
             </div>
 
             {/* Report Details */}
-            <h2 className="text-xl font-semibold mt-6 mb-2">Report Details</h2>
+            <h2 className="text-xl font-semibold mt-4 mb-2">Report Details</h2>
             <div className="space-y-4">
               <div>
                 <Label htmlFor="narrative">Narrative</Label>
                 <Textarea id="narrative" name="narrative" />
               </div>
               <div>
-                <Label htmlFor="additionalContext">Additional Context</Label>
-                <Textarea id="additionalContext" name="additionalContext" />
+                <Label htmlFor="additional_context">Additional Context</Label>
+                <Textarea id="additional_context" name="additional_context" />
               </div>
               <div>
-                <Label>Desired Outcome</Label>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                  <div className="flex items-center space-x-2">
-                    <Checkbox id="outcome1" name="desiredOutcomeArray" value="Refund" />
-                    <Label htmlFor="outcome1">Refund</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox id="outcome2" name="desiredOutcomeArray" value="Investigation" />
-                    <Label htmlFor="outcome2">Investigation</Label>
-                  </div>
-                </div>
+                <Label>Desired Outcome (select all that apply, JSON array)</Label>
+                <Input id="desired_outcome_array" name="desired_outcome_array" defaultValue="[]" />
               </div>
               <div>
-                <Label htmlFor="desiredOutcomeOther">Other Desired Outcome</Label>
-                <Input id="desiredOutcomeOther" name="desiredOutcomeOther" />
+                <Label htmlFor="desired_outcome_other">Other Desired Outcome</Label>
+                <Input id="desired_outcome_other" name="desired_outcome_other" />
               </div>
             </div>
 
             {/* AI Enhancement */}
-            <h2 className="text-xl font-semibold mt-6 mb-2">AI Enhancement</h2>
+            <h2 className="text-xl font-semibold mt-4 mb-2">AI Enhancement</h2>
             <div className="space-y-4">
               <div>
-                <Label htmlFor="aiRefinementOption">AI Refinement Option</Label>
-                <Select name="aiRefinementOption">
+                <Label htmlFor="ai_refinement_option">AI Refinement Option</Label>
+                <Select name="ai_refinement_option">
                   <SelectTrigger>
-                    <SelectValue placeholder="Select AI option" />
+                    <SelectValue placeholder="Select option" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="summarize">Summarize</SelectItem>
@@ -295,71 +297,61 @@ export default function IntegrationTestPage() {
                 </Select>
               </div>
               <div>
-                <Label htmlFor="reportDescription">AI Generated Report Description</Label>
-                <Textarea id="reportDescription" name="reportDescription" />
+                <Label htmlFor="report_description">Report Description (AI generated)</Label>
+                <Textarea id="report_description" name="report_description" />
               </div>
             </div>
 
             {/* Referral */}
-            <h2 className="text-xl font-semibold mt-6 mb-2">Referral</h2>
+            <h2 className="text-xl font-semibold mt-4 mb-2">Referral</h2>
             <div className="space-y-4">
               <div>
-                <Label htmlFor="referralSource">Referral Source</Label>
-                <Select name="referralSource">
+                <Label htmlFor="referral_source">Referral Source</Label>
+                <Select name="referral_source">
                   <SelectTrigger>
-                    <SelectValue placeholder="Select referral source" />
+                    <SelectValue placeholder="Select source" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="friend">Friend</SelectItem>
                     <SelectItem value="social_media">Social Media</SelectItem>
-                    <SelectItem value="search_engine">Search Engine</SelectItem>
+                    <SelectItem value="friend">Friend</SelectItem>
+                    <SelectItem value="other">Other</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div>
-                <Label htmlFor="referralSourceOther">Other Referral Source</Label>
-                <Input id="referralSourceOther" name="referralSourceOther" />
+                <Label htmlFor="referral_source_other">Other Referral Source</Label>
+                <Input id="referral_source_other" name="referral_source_other" />
               </div>
             </div>
 
             {/* Consents */}
-            <h2 className="text-xl font-semibold mt-6 mb-2">Consents</h2>
+            <h2 className="text-xl font-semibold mt-4 mb-2">Consents</h2>
             <div className="space-y-2">
               <div className="flex items-center space-x-2">
-                <Checkbox id="dcwpConsent" name="dcwpConsent" />
-                <Label htmlFor="dcwpConsent">DCWP Consent</Label>
+                <Checkbox id="dcwp_consent" name="dcwp_consent" />
+                <Label htmlFor="dcwp_consent">DCWP Consent</Label>
               </div>
               <div className="flex items-center space-x-2">
-                <Checkbox id="proxyConsent" name="proxyConsent" />
-                <Label htmlFor="proxyConsent">Proxy Consent</Label>
+                <Checkbox id="proxy_consent" name="proxy_consent" />
+                <Label htmlFor="proxy_consent">Proxy Consent</Label>
               </div>
               <div className="flex items-center space-x-2">
-                <Checkbox id="mailingListConsent" name="mailingListConsent" />
-                <Label htmlFor="mailingListConsent">Mailing List Consent</Label>
+                <Checkbox id="mailing_list_consent" name="mailing_list_consent" />
+                <Label htmlFor="mailing_list_consent">Mailing List Consent</Label>
               </div>
             </div>
 
-            {/* Document Info (Placeholder for file uploads) */}
-            <h2 className="text-xl font-semibold mt-6 mb-2">Document Information</h2>
+            {/* Document Info */}
+            <h2 className="text-xl font-semibold mt-4 mb-2">Document Information</h2>
             <div>
-              <Label htmlFor="documentInfo">Document Info (e.g., {'file1": "url1'})</Label>
-              <Textarea
-                id="documentInfo"
-                name="documentInfo"
-                placeholder='{"lease_agreement": "https://example.com/lease.pdf"}'
-              />
+              <Label htmlFor="document_info">Document Info (JSON format, e.g., {'filename": "doc.pdf'})</Label>
+              <Input id="document_info" name="document_info" defaultValue="{}" />
             </div>
 
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Submitting..." : "Submit Report"}
-            </Button>
+            <SubmitButton />
 
-            {response && (
-              <div
-                className={`mt-4 p-3 rounded-md ${response.success ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}
-              >
-                {response.success ? response.message : `Error: ${JSON.stringify(response.error)}`}
-              </div>
+            {state?.message && (
+              <p className={`mt-4 ${state.success ? "text-green-600" : "text-red-600"}`}>{state.message}</p>
             )}
           </form>
         </CardContent>

@@ -1,9 +1,7 @@
 -- Update the existing tables to match the form data structure
 -- Run this script to add missing columns and fix schema mismatches
 
--- First, let's check if we need to rename the waitlist table to leads
--- The form is trying to insert into 'leads' but the table is 'waitlist'
-ALTER TABLE IF EXISTS waitlist RENAME TO leads;
+-- The 'leads' table is created directly by create-tables.sql, so no rename is needed here.
 
 -- Update the reports table to match the form data structure
 ALTER TABLE reports 
