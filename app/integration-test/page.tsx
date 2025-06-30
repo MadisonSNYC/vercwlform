@@ -1,11 +1,9 @@
 "use client"
 
-import { useEffect, useState } from "react"
 import { testDatabaseConnection } from "@/lib/actions"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { Terminal } from "lucide-react"
+import { useState } from "react"
 
 export default function IntegrationTestPage() {
   const [connectionStatus, setConnectionStatus] = useState<string | null>(null)
@@ -14,18 +12,9 @@ export default function IntegrationTestPage() {
   const handleTestConnection = async () => {
     setIsConnecting(true)
     const result = await testDatabaseConnection()
-    if (result.success) {
-      setConnectionStatus(`Success: ${result.message}`)
-    } else {
-      setConnectionStatus(`Error: ${result.message}`)
-    }
+    setConnectionStatus(result.message)
     setIsConnecting(false)
   }
-
-  useEffect(() => {
-    // Optionally test connection on component mount
-    // handleTestConnection();
-  }, [])
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-100 p-4">
@@ -39,17 +28,13 @@ export default function IntegrationTestPage() {
             {isConnecting ? "Connecting..." : "Test Database Connection"}
           </Button>
           {connectionStatus && (
-            <Alert
-              className={
-                connectionStatus.startsWith("Success")
-                  ? "border-green-500 text-green-700"
-                  : "border-red-500 text-red-700"
-              }
+            <div
+              className={`mt-4 p-3 rounded-md ${
+                connectionStatus.includes("successful") ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+              }`}
             >
-              <Terminal className="h-4 w-4" />
-              <AlertTitle>Connection Status</AlertTitle>
-              <AlertDescription>{connectionStatus}</AlertDescription>
-            </Alert>
+              {connectionStatus}
+            </div>
           )}
         </CardContent>
       </Card>

@@ -107,7 +107,7 @@ CREATE INDEX IF NOT EXISTS idx_reports_fee_charges ON reports USING GIN(fee_char
 
 -- Enable Row Level Security (RLS)
 ALTER TABLE leads ENABLE ROW LEVEL SECURITY;
-ALTER TABLE TABLE reports ENABLE ROW LEVEL SECURITY;
+ALTER TABLE reports ENABLE ROW LEVEL SECURITY;
 
 -- Create policies to allow inserts (you may want to adjust these based on your auth setup)
 CREATE POLICY IF NOT EXISTS "Allow public inserts on leads" ON leads
