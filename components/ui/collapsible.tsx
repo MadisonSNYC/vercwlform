@@ -13,7 +13,7 @@ const CollapsibleContent = React.forwardRef<
   React.ElementRef<typeof CollapsiblePrimitive.CollapsibleContent>,
   React.ComponentPropsWithoutRef<typeof CollapsiblePrimitive.CollapsibleContent>
 >(({ className, children, ...props }, ref) => (
-  <CollapsiblePrimitive.CollapsibleContent
+  <CollapsiblePrimitive.Content
     ref={ref}
     className={cn(
       "overflow-hidden text-sm data-[state=closed]:animate-collapsible-up data-[state=open]:animate-collapsible-down",
@@ -21,10 +21,10 @@ const CollapsibleContent = React.forwardRef<
     )}
     {...props}
   >
-    <div className="flex flex-col">{children}</div>
-  </CollapsiblePrimitive.CollapsibleContent>
+    {children}
+  </CollapsiblePrimitive.Content>
 ))
 
-CollapsibleContent.displayName = CollapsiblePrimitive.CollapsibleContent.displayName
+CollapsibleContent.displayName = CollapsiblePrimitive.Content.displayName
 
 export { Collapsible, CollapsibleTrigger, CollapsibleContent }

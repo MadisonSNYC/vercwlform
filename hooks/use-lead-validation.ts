@@ -11,18 +11,19 @@ interface LeadFormData {
   contact_time?: string
   issue_snapshot?: string
   mailing_list_consent?: boolean
+  narrative?: string
   // Add other fields as they become relevant for validation
 }
 
 // Define a type for validation errors
 type LeadFormErrors = {
-  [key in keyof LeadFormData]?: string
+  [key: string]: string
 }
 
 export function useLeadValidation() {
   const [errors, setErrors] = useState<LeadFormErrors>({})
 
-  const validateField = useCallback((fieldName: keyof LeadFormData, value: any): string | undefined => {
+  const validateField = useCallback((fieldName: string, value: any): string | undefined => {
     switch (fieldName) {
       case "email":
         if (!value || value.trim() === "") {
@@ -33,11 +34,13 @@ export function useLeadValidation() {
         }
         break
       case "first_name":
+      case "firstName":
         if (!value || value.trim() === "") {
           return "First name is required."
         }
         break
       case "last_name":
+      case "lastName":
         if (!value || value.trim() === "") {
           return "Last name is required."
         }
@@ -61,6 +64,11 @@ export function useLeadValidation() {
           return "Issue snapshot cannot exceed 500 characters."
         }
         break
+      case "narrative":
+        if (!value || value.trim() === "") {
+          return "Narrative is required."
+        }
+        break
       // Add validation for other fields as they are added to LeadFormData
       default:
         break
@@ -68,40 +76,29 @@ export function useLeadValidation() {
     return undefined // No error
   }, [])
 
-  const validateForm = useCallback(
-    (formData: LeadFormData): boolean => {
-      let isValid = true
+  const validateLeadForm = useCallback(
+    (formData: any) => {
       const newErrors: LeadFormErrors = {}
-
-      // Validate all required fields
-      const requiredFields: Array<keyof LeadFormData> = ["email", "first_name", "last_name", "form_type"]
-      requiredFields.forEach((field) => {
-        const error = validateField(field, formData[field])
-        if (error) {
-          newErrors[field] = error
-          isValid = false
-        }
-      })
-
-      // Validate optional fields if they are present
-      if (formData.phone !== undefined) {
-        const error = validateField("phone", formData.phone)
-        if (error) {
-          newErrors.phone = error
-          isValid = false
-        }
-      }
-      if (formData.issue_snapshot !== undefined) {
-        const error = validateField("issue_snapshot", formData.issue_snapshot)
-        if (error) {
-          newErrors.issue_snapshot = error
-          isValid = false
-        }
-      }
-      // Add checks for other optional fields
-
+      if (!formData.email) newErrors.email = "Email is required."
+      if (!formData.firstName) newErrors.firstName = "First Name is required."
+      if (!formData.lastName) newErrors.lastName = "Last Name is required."
+      // Add more specific validations as needed
       setErrors(newErrors)
-      return isValid
+      return newErrors
+    },
+    [validateField],
+  )
+
+  const validateReportForm = useCallback(
+    (formData: any) => {
+      const newErrors: LeadFormErrors = {}
+      if (!formData.email) newErrors.email = "Email is required."
+      if (!formData.firstName) newErrors.firstName = "First Name is required."
+      if (!formData.lastName) newErrors.lastName = "Last Name is required."
+      if (!formData.narrative) newErrors.narrative = "Narrative is required."
+      // Add more specific validations for report form fields
+      setErrors(newErrors)
+      return newErrors
     },
     [validateField],
   )
@@ -110,5 +107,5 @@ export function useLeadValidation() {
     setErrors({})
   }, [])
 
-  return { errors, validateField, validateForm, clearErrors }
+  return { errors, validateField, validateLeadForm, validateReportForm, clearErrors }
 }

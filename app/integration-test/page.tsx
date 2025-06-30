@@ -1,55 +1,36 @@
-"use client"
+import { createClient } from "@/lib/supabase/server"
+import { cookies } from "next/headers"
 
-import { useEffect, useState } from "react"
-import { createClient } from "@/lib/supabase/client"
+export default async function IntegrationTestPage() {
+  const cookieStore = cookies()
+  const supabase = createClient(cookieStore)
 
-export default function IntegrationTestPage() {
-  const [testResult, setTestResult] = useState("Running tests...")
-  const supabase = createClient()
-
-  useEffect(() => {
-    async function runTests() {
-      try {
-        // Test database connection
-        const { data, error: dbError } = await supabase.from("leads").select("*").limit(1)
-        if (dbError) {
-          throw new Error(`Database connection failed: ${dbError.message}`)
-        }
-        console.log("Database connection successful:", data)
-
-        // Test environment variables
-        if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-          throw new Error("Supabase environment variables are not set.")
-        }
-        console.log("Supabase environment variables are set.")
-
-        // Test a simple insert (optional, requires RLS policy for public inserts)
-        // const { data: insertData, error: insertError } = await supabase.from('leads').insert({
-        //   email: `test-${Date.now()}@example.com`,
-        //   first_name: 'Test',
-        //   last_name: 'User',
-        //   form_type: 'waitlist'
-        // }).select()
-        // if (insertError) {
-        //   throw new Error(`Insert test failed: ${insertError.message}`)
-        // }
-        // console.log('Insert test successful:', insertData)
-
-        setTestResult("All integration tests passed successfully!")
-      } catch (error: any) {
-        setTestResult(`Integration test failed: ${error.message}`)
-        console.error("Integration test error:", error)
-      }
-    }
-
-    runTests()
-  }, [])
+  const { data: leads, error: leadsError } = await supabase.from("leads").select("*")
+  const { data: reports, error: reportsError } = await supabase.from("reports").select("*")
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4">
-      <h1 className="text-3xl font-bold mb-4">Integration Test Page</h1>
-      <p className="text-lg text-center">{testResult}</p>
-      <p className="mt-4 text-sm text-gray-600">Check the browser console for detailed logs.</p>
+    <div className="container mx-auto p-4">
+      <h1 className="text-2xl font-bold mb-4">Supabase Integration Test</h1>
+
+      <div className="mb-8">
+        <h2 className="text-xl font-semibold mb-2">Leads Table Data</h2>
+        {leadsError && <p className="text-red-500">Error fetching leads: {leadsError.message}</p>}
+        {leads && leads.length > 0 ? (
+          <pre className="bg-gray-100 p-4 rounded-md text-sm overflow-auto">{JSON.stringify(leads, null, 2)}</pre>
+        ) : (
+          <p>No leads found or an error occurred.</p>
+        )}
+      </div>
+
+      <div>
+        <h2 className="text-xl font-semibold mb-2">Reports Table Data</h2>
+        {reportsError && <p className="text-red-500">Error fetching reports: {reportsError.message}</p>}
+        {reports && reports.length > 0 ? (
+          <pre className="bg-gray-100 p-4 rounded-md text-sm overflow-auto">{JSON.stringify(reports, null, 2)}</pre>
+        ) : (
+          <p>No reports found or an error occurred.</p>
+        )}
+      </div>
     </div>
   )
 }

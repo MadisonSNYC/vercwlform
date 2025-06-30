@@ -78,8 +78,8 @@ CREATE INDEX IF NOT EXISTS idx_reports_fee_charges ON reports USING GIN(fee_char
 CREATE INDEX IF NOT EXISTS idx_reports_violation_others ON reports USING GIN(violation_others);
 CREATE INDEX IF NOT EXISTS idx_reports_desired_outcome_array ON reports USING GIN(desired_outcome_array);
 
--- Update the leads table structure to match what the form expects
-ALTER TABLE leads
+-- Update the vercel table structure to match what the form expects
+ALTER TABLE vercel -- Changed from leads
 ADD COLUMN IF NOT EXISTS form_type TEXT DEFAULT 'waitlist';
 
 -- Add check constraint for form_type if it doesn't exist
@@ -87,10 +87,10 @@ DO $$
 BEGIN
   IF NOT EXISTS (
       SELECT 1 FROM information_schema.table_constraints
-      WHERE constraint_name = 'leads_form_type_check'
-      AND table_name = 'leads'
+      WHERE constraint_name = 'vercel_form_type_check' -- Changed from leads_form_type_check
+      AND table_name = 'vercel' -- Changed from leads
   ) THEN
-      ALTER TABLE leads ADD CONSTRAINT leads_form_type_check
+      ALTER TABLE vercel ADD CONSTRAINT vercel_form_type_check -- Changed from leads_form_type_check
       CHECK (form_type IN ('schedule', 'waitlist', 'report'));
   END IF;
 END $$;

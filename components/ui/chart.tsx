@@ -1,87 +1,144 @@
 "use client"
 
-import React from "react"
-import {
-  CartesianGrid,
-  Line,
-  LineChart,
-  Bar,
-  BarChart,
-  Pie,
-  PieChart,
-  RadialBar,
-  RadialBarChart,
-  Area,
-  AreaChart,
-} from "recharts"
-import { cn } from "@/lib/utils"
+import type * as React from "react"
+import { Bar, BarChart, Line, LineChart, Pie, PieChart, XAxis, YAxis, CartesianGrid } from "recharts"
 
-import {
-  ChartContainer as RechartsChartContainer,
-  type ChartContainerProps as RechartsChartContainerProps,
-} from "@tremor/react"
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
+import { Cell } from "recharts"
 
-// Define types for common chart props
-type ChartProps = RechartsChartContainerProps & {
-  data: Record<string, any>[]
-  categories: string[]
-  index: string
-  type?: "line" | "bar" | "pie" | "radial" | "area"
+// Helper to determine chart type based on data keys
+function getChartType(data: any[], dataKeys: string[]) {
+  if (!data || data.length === 0 || dataKeys.length === 0) {
+    return null
+  }
+
+  // Check if it's suitable for a PieChart (single data key, values are numbers)
+  if (dataKeys.length === 1 && typeof data[0][dataKeys[0]] === "number") {
+    // For PieChart, we typically need a name and a value.
+    // Assuming the first key is the value and there's a 'name' key for labels.
+    const hasNameKey = data.every((item) => item.name !== undefined)
+    if (hasNameKey) {
+      return "pie"
+    }
+  }
+
+  // Check if it's suitable for a BarChart or LineChart (multiple data keys, typically time-series or categories)
+  // This is a simplification; more robust logic might inspect data types and distribution.
+  if (dataKeys.length > 0) {
+    // If there's a 'date' or 'category' like key, it's likely a line or bar chart
+    const hasCategoryOrTime = data.every((item) => item.name !== undefined || item.date !== undefined)
+    if (hasCategoryOrTime) {
+      // Default to BarChart if no specific time-series pattern is detected
+      return "bar"
+    }
+  }
+
+  return null
 }
 
-const ChartContainer = React.forwardRef<HTMLDivElement, RechartsChartContainerProps>(({ className, ...props }, ref) => (
-  <RechartsChartContainer
-    ref={ref}
-    className={cn("flex aspect-video items-center justify-center", className)}
-    {...props}
-  />
-))
-ChartContainer.displayName = "ChartContainer"
+interface DynamicChartProps extends React.HTMLAttributes<HTMLDivElement> {
+  data: Record<string, any>[]
+  dataKeys: string[]
+  chartType?: "line" | "bar" | "pie"
+  categoryKey?: string // For line/bar charts, the key for the x-axis (e.g., 'name', 'date')
+  nameKey?: string // For pie charts, the key for the segment name (e.g., 'name')
+  valueKey?: string // For pie charts, the key for the segment value (e.g., 'value')
+  colors?: string[] // Array of colors for chart elements
+}
 
-const Chart = ({ data, categories, index, type = "line", className, ...props }: ChartProps) => {
-  const ChartComponent =
-    type === "line"
-      ? LineChart
-      : type === "bar"
-        ? BarChart
-        : type === "pie"
-          ? PieChart
-          : type === "radial"
-            ? RadialBarChart
-            : AreaChart
+export function DynamicChart({
+  data,
+  dataKeys,
+  chartType,
+  categoryKey = "name", // Default for XAxis
+  nameKey = "name", // Default for PieChart segment name
+  valueKey = "value", // Default for PieChart segment value
+  colors = ["hsl(var(--primary))", "hsl(var(--accent))", "hsl(var(--secondary))", "hsl(var(--muted))"],
+  className,
+  ...props
+}: DynamicChartProps) {
+  const resolvedChartType = chartType || getChartType(data, dataKeys)
 
-  const renderChartElements = () => {
-    switch (type) {
+  if (!data || data.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-[300px] text-muted-foreground">
+        No data available for chart.
+      </div>
+    )
+  }
+
+  const renderChart = () => {
+    switch (resolvedChartType) {
       case "line":
-        return categories.map((category) => (
-          <Line key={category} dataKey={category} stroke="hsl(var(--primary))" dot={false} />
-        ))
+        return (
+          <LineChart data={data}>
+            <CartesianGrid vertical={false} />
+            <XAxis dataKey={categoryKey} tickLine={false} axisLine={false} tickMargin={8} minTickGap={32} />
+            <YAxis tickLine={false} axisLine={false} tickMargin={8} />
+            <ChartTooltip content={<ChartTooltipContent />} />
+            {dataKeys.map((key, index) => (
+              <Line
+                key={key}
+                dataKey={key}
+                stroke={colors[index % colors.length]}
+                dot={false}
+                activeDot={{ r: 6 }}
+                strokeWidth={2}
+              />
+            ))}
+          </LineChart>
+        )
       case "bar":
-        return categories.map((category) => <Bar key={category} dataKey={category} fill="hsl(var(--primary))" />)
+        return (
+          <BarChart data={data}>
+            <CartesianGrid vertical={false} />
+            <XAxis dataKey={categoryKey} tickLine={false} axisLine={false} tickMargin={8} minTickGap={32} />
+            <YAxis tickLine={false} axisLine={false} tickMargin={8} />
+            <ChartTooltip content={<ChartTooltipContent />} />
+            {dataKeys.map((key, index) => (
+              <Bar key={key} dataKey={key} fill={colors[index % colors.length]} radius={[4, 4, 0, 0]} />
+            ))}
+          </BarChart>
+        )
       case "pie":
         return (
-          <Pie data={data} dataKey={index} nameKey={categories[0]} outerRadius={80} fill="hsl(var(--primary))" label />
+          <PieChart>
+            <ChartTooltip content={<ChartTooltipContent nameKey={nameKey} />} />
+            <Pie
+              data={data}
+              dataKey={valueKey}
+              nameKey={nameKey}
+              outerRadius={80}
+              fill={colors[0]} // Pie chart typically uses one fill for the whole, or colors are managed per segment
+            >
+              {data.map((entry, index) => (
+                <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
+              ))}
+            </Pie>
+          </PieChart>
         )
-      case "radial":
-        return <RadialBar dataKey={index} fill="hsl(var(--primary))" background clockWise />
-      case "area":
-        return categories.map((category) => (
-          <Area key={category} dataKey={category} fill="hsl(var(--primary))" stroke="hsl(var(--primary))" />
-        ))
       default:
-        return null
+        return (
+          <div className="flex items-center justify-center h-[300px] text-muted-foreground">
+            Unsupported chart type or insufficient data.
+          </div>
+        )
     }
   }
 
   return (
-    <ChartContainer className={className} {...props}>
-      <ChartComponent data={data}>
-        <CartesianGrid vertical={false} />
-        {/* <ChartTooltip cursor={false} content={<ChartTooltipContent />} /> */}
-        {renderChartElements()}
-      </ChartComponent>
+    <ChartContainer
+      config={dataKeys.reduce((acc, key, index) => {
+        acc[key] = {
+          label: key.charAt(0).toUpperCase() + key.slice(1), // Simple capitalization
+          color: colors[index % colors.length],
+        }
+        return acc
+      }, {})}
+      className={className}
+      {...props}
+    >
+      {renderChart()}
     </ChartContainer>
   )
 }
-
-export { Chart }

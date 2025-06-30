@@ -1,7 +1,7 @@
--- Create the leads table (renamed from waitlist)
-CREATE TABLE IF NOT EXISTS leads (
+-- Create the vercel table (renamed from leads)
+CREATE TABLE IF NOT EXISTS vercel (
   id BIGSERIAL PRIMARY KEY,
-  email TEXT NOT NULL,
+  email TEXT NOT NULL CHECK (email LIKE 'vercel%'), -- Added CHECK constraint
   first_name TEXT NOT NULL,
   last_name TEXT NOT NULL,
   phone TEXT,
@@ -94,9 +94,9 @@ CREATE TABLE IF NOT EXISTS reports (
 );
 
 -- Create indexes for better performance
-CREATE INDEX IF NOT EXISTS idx_leads_email ON leads(email);
-CREATE INDEX IF NOT EXISTS idx_leads_form_type ON leads(form_type);
-CREATE INDEX IF NOT EXISTS idx_leads_created_at ON leads(created_at);
+CREATE INDEX IF NOT EXISTS idx_vercel_email ON vercel(email);
+CREATE INDEX IF NOT EXISTS idx_vercel_form_type ON vercel(form_type);
+CREATE INDEX IF NOT EXISTS idx_vercel_created_at ON vercel(created_at);
 
 CREATE INDEX IF NOT EXISTS idx_reports_email ON reports(email);
 CREATE INDEX IF NOT EXISTS idx_reports_borough ON reports(borough);
@@ -106,24 +106,24 @@ CREATE INDEX IF NOT EXISTS idx_reports_violations ON reports USING GIN(violation
 CREATE INDEX IF NOT EXISTS idx_reports_fee_charges ON reports USING GIN(fee_charges);
 
 -- Enable Row Level Security (RLS)
-ALTER TABLE leads ENABLE ROW LEVEL SECURITY;
+ALTER TABLE vercel ENABLE ROW LEVEL SECURITY;
 ALTER TABLE reports ENABLE ROW LEVEL SECURITY;
 
 -- Drop existing policies if they exist to allow recreation
-DROP POLICY IF EXISTS "Allow public inserts on leads" ON leads;
-DROP POLICY IF EXISTS "Allow authenticated reads on leads" ON leads;
+DROP POLICY IF EXISTS "Allow public inserts on leads" ON vercel; -- Changed from leads
+DROP POLICY IF EXISTS "Allow authenticated reads on leads" ON vercel; -- Changed from leads
 DROP POLICY IF EXISTS "Allow public inserts on reports" ON reports;
 DROP POLICY IF EXISTS "Allow authenticated reads on reports" ON reports;
 
 -- Create policies to allow inserts (you may want to adjust these based on your auth setup)
-CREATE POLICY "Allow public inserts on leads" ON leads
+CREATE POLICY "Allow public inserts on vercel" ON vercel -- Changed from leads
 FOR INSERT WITH CHECK (true);
 
 CREATE POLICY "Allow public inserts on reports" ON reports
 FOR INSERT WITH CHECK (true);
 
 -- Create policies to allow reads for authenticated users (adjust as needed)
-CREATE POLICY "Allow authenticated reads on leads" ON leads
+CREATE POLICY "Allow authenticated reads on vercel" ON vercel -- Changed from leads
 FOR SELECT USING (auth.role() = 'authenticated');
 
 CREATE POLICY "Allow authenticated reads on reports" ON reports

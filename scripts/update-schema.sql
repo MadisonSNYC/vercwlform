@@ -1,7 +1,13 @@
 -- Update the existing tables to match the form data structure
 -- Run this script to add missing columns and fix schema mismatches
 
--- The 'leads' table is created directly by create-tables.sql, so no rename is needed here.
+-- Rename the 'leads' table to 'vercel' if it exists
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'leads') THEN
+        ALTER TABLE leads RENAME TO vercel;
+    END IF;
+END $$;
 
 -- Update the reports table to match the form data structure
 ALTER TABLE reports 
@@ -18,7 +24,7 @@ ALTER TABLE reports
   ADD COLUMN IF NOT EXISTS has_streeteasy_listing BOOLEAN DEFAULT FALSE,
   ADD COLUMN IF NOT EXISTS streeteasy_link TEXT;
 
--- Conditionally rename columns to match form field names
+-- Conditionally rename columns if they exist (PostgreSQL does not support IF EXISTS with RENAME COLUMN)
 DO $$
 BEGIN
     IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='reports' AND column_name='has_street_easy_listing') THEN
@@ -77,8 +83,8 @@ CREATE INDEX IF NOT EXISTS idx_reports_fee_charges ON reports USING GIN(fee_char
 CREATE INDEX IF NOT EXISTS idx_reports_violation_others ON reports USING GIN(violation_others);
 CREATE INDEX IF NOT EXISTS idx_reports_desired_outcome_array ON reports USING GIN(desired_outcome_array);
 
--- Update the leads table structure to match what the form expects
-ALTER TABLE leads 
+-- Update the vercel table structure to match what the form expects
+ALTER TABLE vercel -- Changed from leads
   ADD COLUMN IF NOT EXISTS form_type TEXT DEFAULT 'waitlist';
 
 -- Add check constraint for form_type if it doesn't exist
@@ -86,10 +92,10 @@ DO $$
 BEGIN
     IF NOT EXISTS (
         SELECT 1 FROM information_schema.table_constraints 
-        WHERE constraint_name = 'leads_form_type_check' 
-        AND table_name = 'leads'
+        WHERE constraint_name = 'vercel_form_type_check' -- Changed from leads_form_type_check
+        AND table_name = 'vercel' -- Changed from leads
     ) THEN
-        ALTER TABLE leads ADD CONSTRAINT leads_form_type_check 
+        ALTER TABLE vercel ADD CONSTRAINT vercel_form_type_check -- Changed from leads_form_type_check
         CHECK (form_type IN ('schedule', 'waitlist', 'report'));
     END IF;
 END $$;

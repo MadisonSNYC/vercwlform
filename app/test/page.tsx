@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react"
 import { createClient } from "@/lib/supabase/client"
+import { Button } from "@/components/ui/button"
+import Link from "next/link"
 
 export default function TestPage() {
   const [testResult, setTestResult] = useState("Running tests...")
@@ -46,10 +48,14 @@ export default function TestPage() {
   }, [])
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4">
-      <h1 className="text-3xl font-bold mb-4">Test Page</h1>
-      <p className="text-lg text-center">{testResult}</p>
+    <main className="flex min-h-screen flex-col items-center justify-center p-24">
+      <h1 className="text-4xl font-bold mb-8">Test Page</h1>
+      <p className="mb-4">This is a simple test page.</p>
+      <p className="text-lg text-center mb-4">{testResult}</p>
       <p className="mt-4 text-sm text-gray-600">Check the browser console for detailed logs.</p>
-    </div>
+      <Button asChild>
+        <Link href="/">Go back to Home</Link>
+      </Button>
+    </main>
   )
 }

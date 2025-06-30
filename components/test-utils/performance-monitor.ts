@@ -1,92 +1,46 @@
-"use client"
-
 // components/test-utils/performance-monitor.ts
-
-// This function can be used to monitor web vital metrics in development.
-// It should not be used in production builds as it can add overhead.
-export function setupPerformanceMonitoring() {
-  if (process.env.NODE_ENV !== "production" && typeof window !== "undefined") {
-    console.log("Performance monitoring enabled in development mode.")
-
-    // Monitor Largest Contentful Paint (LCP)
-    new PerformanceObserver((entryList) => {
-      for (const entry of entryList.getEntries()) {
-        if (entry.entryType === "largest-contentful-paint") {
-          console.log("LCP:", entry.renderTime || entry.loadTime)
-        }
-      }
-    }).observe({ type: "largest-contentful-paint", buffered: true })
-
-    // Monitor Cumulative Layout Shift (CLS)
-    new PerformanceObserver((entryList) => {
-      let cls = 0
-      for (const entry of entryList.getEntries()) {
-        if (!entry.hadRecentInput) {
-          cls += entry.value
-        }
-      }
-      console.log("CLS:", cls)
-    }).observe({ type: "layout-shift", buffered: true })
-
-    // Monitor First Input Delay (FID) - Note: FID is deprecated in favor of INP
-    // For modern monitoring, consider using Interaction to Next Paint (INP)
-    new PerformanceObserver((entryList) => {
-      for (const entry of entryList.getEntries()) {
-        if (entry.entryType === "first-input") {
-          console.log("FID:", entry.duration)
-        }
-      }
-    }).observe({ type: "first-input", buffered: true })
-
-    // Monitor Interaction to Next Paint (INP)
-    // This is a more comprehensive metric for responsiveness
-    if ("PerformanceEventTiming" in window) {
-      new PerformanceObserver((entryList) => {
-        let maxInp = 0
-        for (const entry of entryList.getEntries()) {
-          if (entry.entryType === "event" && entry.duration > maxInp) {
-            maxInp = entry.duration
-          }
-        }
-        console.log("INP (max observed):", maxInp)
-      }).observe({ type: "event", buffered: true, durationThreshold: 0 })
-    }
-
-    // Monitor other useful metrics
-    window.addEventListener("load", () => {
-      setTimeout(() => {
-        const { navigation, paint } = performance.getEntriesByType("navigation")[0] as PerformanceNavigationTiming
-        const fcp = performance.getEntriesByName("first-contentful-paint")[0] as PerformancePaintTiming
-
-        if (navigation) {
-          console.log("TTFB (Time to First Byte):", navigation.responseStart - navigation.requestStart)
-          console.log(
-            "DOM Content Loaded:",
-            navigation.domContentLoadedEventEnd - navigation.domContentLoadedEventStart,
-          )
-          console.log("Load Time:", navigation.loadEventEnd - navigation.loadEventStart)
-        }
-        if (fcp) {
-          console.log("FCP (First Contentful Paint):", fcp.startTime)
-        }
-      }, 500) // Give some time for entries to be collected
-    })
-  } else {
-    console.log("Performance monitoring is disabled in production mode.")
+export function startPerformanceMonitor() {
+  console.log("Performance monitoring started.")
+  if (typeof window !== "undefined" && window.performance) {
+    window.performance.mark("start_app_load")
   }
 }
 
-// Example usage (e.g., in your main App component or a specific page):
-/*
-import { setupPerformanceMonitoring } from '@/components/test-utils/performance-monitor';
+export function endPerformanceMonitor() {
+  if (typeof window !== "undefined" && window.performance) {
+    window.performance.mark("end_app_load")
+    window.performance.measure("app_load_time", "start_app_load", "end_app_load")
 
-function MyApp() {
-  useEffect(() => {
-    setupPerformanceMonitoring();
-  }, []);
+    const measures = window.performance.getEntriesByName("app_load_time")
+    if (measures.length > 0) {
+      const appLoadTime = measures[0].duration
+      console.log(`App Load Time: ${appLoadTime.toFixed(2)} ms`)
+    }
 
-  return (
-    // Your app content
-  );
+    // Clear marks and measures to avoid cluttering performance buffer
+    window.performance.clearMarks()
+    window.performance.clearMeasures()
+  }
+  console.log("Performance monitoring ended.")
 }
-*/
+
+export function measureFunctionPerformance<T extends (...args: any[]) => any>(func: T, name: string): T {
+  return ((...args: Parameters<T>): ReturnType<T> => {
+    if (typeof window !== "undefined" && window.performance) {
+      window.performance.mark(`${name}_start`)
+      const result = func(...args)
+      window.performance.mark(`${name}_end`)
+      window.performance.measure(name, `${name}_start`, `${name}_end`)
+      const measures = window.performance.getEntriesByName(name)
+      if (measures.length > 0) {
+        console.log(`Function "${name}" took: ${measures[0].duration.toFixed(2)} ms`)
+      }
+      window.performance.clearMarks(`${name}_start`)
+      window.performance.clearMarks(`${name}_end`)
+      window.performance.clearMeasures(name)
+      return result
+    } else {
+      return func(...args)
+    }
+  }) as T
+}

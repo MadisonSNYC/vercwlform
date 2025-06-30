@@ -1,9 +1,15 @@
 import type React from "react"
+import { LeadProgressIndicator } from "@/components/lead-progress-indicator"
 
-export default function TestFormsLayout({ children }: { children: React.ReactNode }) {
+export default function TestFormsLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">{children}</div>
+    <div className="flex min-h-screen flex-col items-center justify-center p-4 md:p-24">
+      <LeadProgressIndicator />
+      {children}
     </div>
   )
 }

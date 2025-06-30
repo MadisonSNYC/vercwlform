@@ -1,11 +1,19 @@
-import { useToast } from "react-toastify" // Importing useToast from react-toastify
+"use client"
+
+import * as React from "react"
 
 import type { ToastProps } from "@/components/ui/toast"
 
 const TOAST_LIMIT = 1
 const TOAST_REMOVE_DELAY = 1000000
 
-type ToastsMap = Map<string, ToastProps>
+type ToastsMap = Map<
+  string,
+  {
+    toast: ToastProps
+    timeout: ReturnType<typeof setTimeout>
+  }
+>
 
 type Action =
   | {
@@ -18,6 +26,7 @@ type Action =
     }
   | {
       type: "DISMISS_TOAST"
+      toastId?: string
     }
   | {
       type: "REMOVE_TOAST"
@@ -60,19 +69,29 @@ export const reducer = (state: State, action: Action): State => {
         toasts: state.toasts.map((t) => (t.id === action.toast.id ? { ...t, ...action.toast } : t)),
       }
 
-    case "DISMISS_TOAST": {
-      const { toasts } = state
-      const [toastToDismiss] = toasts.splice(toasts.length - 1, 1)
-
-      if (toastToDismiss) {
-        addToRemoveQueue(toastToDismiss.id)
+    case "DISMISS_TOAST":
+      const { toastId } = action
+      // ! Side effects ! - This means all toasts will be dismissed.
+      // If you want to dismiss a single toast, pass the toastId.
+      if (toastId) {
+        addToRemoveQueue(toastId)
+      } else {
+        state.toasts.forEach((toast) => {
+          addToRemoveQueue(toast.id!)
+        })
       }
 
       return {
         ...state,
-        toasts: [],
+        toasts: state.toasts.map((t) =>
+          t.id === toastId || toastId === undefined
+            ? {
+                ...t,
+                open: false,
+              }
+            : t,
+        ),
       }
-    }
     case "REMOVE_TOAST":
       if (action.toastId === undefined) {
         return {
@@ -87,36 +106,69 @@ export const reducer = (state: State, action: Action): State => {
   }
 }
 
-const listeners: Array<(state: State) => void> = []
+const listeners: ((state: State) => void)[] = []
 
-let state: State = {
-  toasts: [],
-}
+let memoryState: State = { toasts: [] }
 
 function dispatch(action: Action) {
-  state = reducer(state, action)
-  listeners.forEach((listener) => listener(state))
+  memoryState = reducer(memoryState, action)
+  listeners.forEach((listener) => listener(memoryState))
 }
 
-type Toast = Pick<ToastProps, "id" | "title" | "description" | "action">
+type Toast = Pick<ToastProps, "id" | "duration" | "promise" | "onOpenChange"> &
+  (
+    | {
+        type: "default" | "success" | "error" | "action" | "loading"
+      }
+    | {
+        type: "promise"
+        promise: Promise<any>
+        loading: string
+        success: string
+        error: string
+      }
+  ) &
+  Omit<ToastProps, "id" | "duration" | "promise" | "type" | "onOpenChange">
 
-function toast({ ...props }: Toast) {
-  const id = crypto.randomUUID()
+function useToast() {
+  const [state, setState] = React.useState<State>(memoryState)
 
-  dispatch({
-    type: "ADD_TOAST",
-    toast: {
-      id,
-      ...props,
-    },
-  })
-
-  addToRemoveQueue(id)
+  React.useEffect(() => {
+    listeners.push(setState)
+    return () => {
+      const index = listeners.indexOf(setState)
+      if (index > -1) {
+        listeners.splice(index, 1)
+      }
+    }
+  }, [state])
 
   return {
-    id: id,
-    dismiss: () => dispatch({ type: "REMOVE_TOAST", toastId: id }),
+    ...state,
+    toast: React.useCallback((props: ToastProps) => {
+      const id = props.id || crypto.randomUUID()
+
+      dispatch({
+        type: "ADD_TOAST",
+        toast: {
+          ...props,
+          id,
+          open: true,
+          onOpenChange: (open) => {
+            if (!open) {
+              dispatch({ type: "DISMISS_TOAST", toastId: id })
+            }
+          },
+        },
+      })
+
+      return {
+        id: id,
+        dismiss: () => dispatch({ type: "DISMISS_TOAST", toastId: id }),
+        update: (props: ToastProps) => dispatch({ type: "UPDATE_TOAST", toast: { ...props, id } }),
+      }
+    }, []),
   }
 }
 
-export { useToast, toast }
+export { useToast, reducer as toastReducer }

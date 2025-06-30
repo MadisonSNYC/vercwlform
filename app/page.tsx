@@ -653,12 +653,14 @@ export default function NYCFAREReporter() {
                 Support This Work
               </button>
             </div>
-            <button
-              onClick={() => scrollToSection("report-form")}
-              className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-4 py-2 rounded-lg font-semibold hover:from-orange-600 hover:to-orange-700 transition-all duration-300 transform hover:scale-105"
-            >
-              Join Beta
-            </button>
+            <div className="flex gap-4">
+              <Button asChild>
+                <Link href="/test-forms">Go to Test Forms</Link>
+              </Button>
+              <Button asChild>
+                <Link href="/integration-test">Go to Integration Test</Link>
+              </Button>
+            </div>
           </div>
         </div>
       </nav>

@@ -1,16 +1,5 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  webpack: (config, { isServer }) => {
-    config.externals.push("@node-rs/argon2", "@node-rs/bcrypt");
-
-    // Add a rule to handle .sql files
-    config.module.rules.push({
-      test: /\.sql$/,
-      use: 'raw-loader',
-    });
-
-    return config;
-  },
   eslint: {
     ignoreDuringBuilds: true,
   },
@@ -18,6 +7,20 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
   images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'hebbkx1anhila5yf.public.blob.vercel-storage.com',
+        port: '',
+        pathname: '/git-blob/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'blob.v0.dev',
+        port: '',
+        pathname: '/**',
+      },
+    ],
     unoptimized: true,
   },
 };
