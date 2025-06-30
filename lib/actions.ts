@@ -2,14 +2,14 @@
 
 import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
-import { headers, cookies } from "next/headers" // Moved to top
+import { headers } from "next/headers"
 
 import { createClient } from "@/lib/supabase/server"
 
 export async function signIn(formData: FormData) {
   const email = formData.get("email") as string
   const password = formData.get("password") as string
-  const supabase = createClient(cookies())
+  const supabase = createClient()
 
   const { error } = await supabase.auth.signInWithPassword({
     email,
@@ -27,7 +27,7 @@ export async function signUp(formData: FormData) {
   const origin = headers().get("origin")
   const email = formData.get("email") as string
   const password = formData.get("password") as string
-  const supabase = createClient(cookies())
+  const supabase = createClient()
 
   const { error } = await supabase.auth.signUp({
     email,
@@ -45,13 +45,13 @@ export async function signUp(formData: FormData) {
 }
 
 export async function signOut() {
-  const supabase = createClient(cookies())
+  const supabase = createClient()
   await supabase.auth.signOut()
   return redirect("/login")
 }
 
 export async function submitLeadForm(formData: FormData) {
-  const supabase = createClient(cookies())
+  const supabase = createClient()
 
   const formType = formData.get("form_type") as string
   const email = formData.get("email") as string
@@ -84,9 +84,8 @@ export async function submitLeadForm(formData: FormData) {
   return { success: true, message: "Form submitted successfully!" }
 }
 
-// Renamed from submitReportForm to submitFareReport
 export async function submitFareReport(prevState: any, formData: FormData) {
-  const supabase = createClient(cookies())
+  const supabase = createClient()
 
   const reportData = {
     first_name: formData.get("first_name") as string,
@@ -161,7 +160,7 @@ export async function submitFareReport(prevState: any, formData: FormData) {
 }
 
 export async function testDatabaseConnection() {
-  const supabase = createClient(cookies())
+  const supabase = createClient()
   try {
     const { data, error } = await supabase.from("reports").select("id").limit(1)
 

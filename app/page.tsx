@@ -19,7 +19,7 @@ import {
   Camera,
   X,
 } from "lucide-react"
-import { submitFareReport } from "@/lib/actions" // Corrected import
+import { submitFareReport } from "@/lib/actions"
 import { useActionState } from "react"
 import { useLeadValidation } from "@/hooks/use-lead-validation"
 import Image from "next/image"
@@ -1284,7 +1284,7 @@ export default function NYCFAREReporter() {
                         />
                         <span>Yes, I want to submit my report now</span>
                       </label>
-                      <label className="flex items-center p-4 border rounded-lg cursor-pointer hover:bg-gray-50">
+                      <label className="flex items-center">
                         <input
                           type="radio"
                           name="testerOptIn"
@@ -1295,7 +1295,7 @@ export default function NYCFAREReporter() {
                         />
                         <span>Yes, email me to schedule my report submission</span>
                       </label>
-                      <label className="flex items-center p-4 border rounded-lg cursor-pointer hover:bg-gray-50">
+                      <label className="flex items-center">
                         <input
                           type="radio"
                           name="testerOptIn"
