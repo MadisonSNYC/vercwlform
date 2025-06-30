@@ -1,158 +1,86 @@
 "use client"
 
 import { useState } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Progress } from "@/components/ui/progress"
-import { Separator } from "@/components/ui/separator"
-import { testDatabaseConnection } from "@/lib/actions" // Import the server action
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { testDatabaseConnection } from "@/lib/actions"
+import { AlertCircle, CheckCircle } from "lucide-react"
 
 export default function IntegrationTestPage() {
-  const [testStatus, setTestStatus] = useState<string>("idle")
-  const [progress, setProgress] = useState<number>(0)
-  const [results, setResults] = useState<string[]>([])
-  const [dbConnectionStatus, setDbConnectionStatus] = useState<string>("Not tested")
+  const [testResult, setTestResult] = useState<{ success: boolean; message: string } | null>(null)
+  const [isTesting, setIsTesting] = useState(false)
 
-  const runAllTests = async () => {
-    setTestStatus("running")
-    setResults([])
-    setProgress(0)
-
-    const newResults: string[] = []
-    let currentProgress = 0
-    const totalTests = 3 // Example: Database, API Health, Form Submission
-
-    // Test 1: Database Connection
-    newResults.push("Running Database Connection Test...")
-    setResults([...newResults])
-    const dbResult = await testDatabaseConnection()
-    if (dbResult.connected) {
-      newResults.push("Database Connection: SUCCESS")
-      setDbConnectionStatus("Connected")
-    } else {
-      newResults.push(`Database Connection: FAILED - ${dbResult.error?.message || "Unknown error"}`)
-      setDbConnectionStatus("Failed")
-    }
-    currentProgress += (1 / totalTests) * 100
-    setProgress(currentProgress)
-    setResults([...newResults])
-
-    // Test 2: API Health Check
-    newResults.push("Running API Health Check...")
-    setResults([...newResults])
-    try {
-      const response = await fetch("/api/health")
-      const data = await response.json()
-      if (response.ok && data.status === "healthy") {
-        newResults.push(`API Health Check: SUCCESS - ${JSON.stringify(data)}`)
-      } else {
-        newResults.push(`API Health Check: FAILED - ${JSON.stringify(data)}`)
-      }
-    } catch (error: any) {
-      newResults.push(`API Health Check: ERROR - ${error.message}`)
-    }
-    currentProgress += (1 / totalTests) * 100
-    setProgress(currentProgress)
-    setResults([...newResults])
-
-    // Test 3: Simulate Form Submission (Placeholder)
-    newResults.push("Simulating Form Submission (Placeholder)...")
-    setResults([...newResults])
-    await new Promise((resolve) => setTimeout(resolve, 1000)) // Simulate network delay
-    newResults.push("Form Submission Simulation: SUCCESS (Requires actual form data for real test)")
-    currentProgress += (1 / totalTests) * 100
-    setProgress(currentProgress)
-    setResults([...newResults])
-
-    setTestStatus("completed")
-  }
-
-  const runDatabaseTest = async () => {
-    setDbConnectionStatus("Testing...")
-    const dbResult = await testDatabaseConnection()
-    if (dbResult.connected) {
-      setDbConnectionStatus("Connected successfully!")
-    } else {
-      setDbConnectionStatus(`Failed to connect: ${dbResult.error?.message || "Unknown error"}`)
-    }
+  const handleTestConnection = async () => {
+    setIsTesting(true)
+    const result = await testDatabaseConnection()
+    setTestResult(result)
+    setIsTesting(false)
   }
 
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-3xl font-bold mb-6">Integration Test Suite</h1>
+      <h1 className="text-3xl font-bold mb-6">Integration Test Page</h1>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-        {/* Test Controls Card */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Test Controls</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <Button onClick={runAllTests} disabled={testStatus === "running"} className="w-full">
-              {testStatus === "running" ? "Running Tests..." : "Run All Tests"}
-            </Button>
-            <Progress value={progress} className="w-full" />
-            <div className="text-sm text-gray-500">Status: {testStatus}</div>
-          </CardContent>
-        </Card>
-
+      <div className="grid gap-6 md:grid-cols-2">
         {/* Database Setup Instructions Card */}
         <Card>
           <CardHeader>
             <CardTitle>Database Setup Instructions</CardTitle>
+            <CardDescription>
+              Follow these steps to ensure your Supabase database is correctly set up for this application.
+            </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4 text-sm">
-            <p>To ensure your application connects correctly to Supabase, follow these steps:</p>
-            <ol className="list-decimal list-inside space-y-1">
+          <CardContent className="space-y-4">
+            <ol className="list-decimal list-inside space-y-2 text-sm text-gray-700">
               <li>
-                <strong>Environment Variables:</strong> Ensure `NEXT_PUBLIC_SUPABASE_URL` and
-                `NEXT_PUBLIC_SUPABASE_ANON_KEY` are set in your `.env.local` file or Vercel environment variables.
+                <strong>Create Tables:</strong> Open your Supabase project, navigate to the SQL Editor, and run the
+                script located at `scripts/create-tables.sql`. This will set up the initial `reports`,
+                `waitlist_entries`, and `scheduled_reports` tables.
               </li>
               <li>
-                <strong>Run Schema Scripts:</strong> Execute the SQL scripts located in the `scripts/` directory (e.g.,
-                `create-tables.sql`, `update-schema.sql`) in your Supabase SQL Editor to set up or update your database
-                schema.
+                <strong>Update Schema:</strong> After creating tables, run the script at `scripts/update-schema.sql` to
+                apply any necessary schema updates or migrations.
               </li>
               <li>
-                <strong>Enable RLS:</strong> Verify Row Level Security (RLS) is enabled for `leads` and `reports` tables
-                in Supabase, and appropriate policies are set.
+                <strong>Verify Environment Variables:</strong> Ensure your `.env.local` file (or Vercel environment
+                variables) contains `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` with your Supabase
+                project credentials.
               </li>
               <li>
-                <strong>Test Connection:</strong> Use the button below to test the database connection from the
-                application.
+                <strong>Test Connection:</strong> Use the "Test Database Connection" button on this page to verify that
+                your application can connect to Supabase.
               </li>
             </ol>
-            <Separator />
-            <Button onClick={runDatabaseTest} disabled={dbConnectionStatus === "Testing..."}>
-              Test Database Connection
+            <p className="text-xs text-gray-500 mt-4">
+              Note: If you encounter issues, double-check your Supabase project settings, API keys, and ensure your
+              database is publicly accessible or your network settings are configured correctly.
+            </p>
+          </CardContent>
+        </Card>
+
+        {/* Database Connection Test Card */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Test Supabase Connection</CardTitle>
+            <CardDescription>Click the button below to test the connection to your Supabase database.</CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-4">
+            <Button onClick={handleTestConnection} disabled={isTesting}>
+              {isTesting ? "Testing..." : "Test Database Connection"}
             </Button>
-            <div className="text-sm text-gray-500">Database Connection Status: {dbConnectionStatus}</div>
+            {testResult && (
+              <div
+                className={`flex items-center gap-2 p-3 rounded-md ${
+                  testResult.success ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
+                }`}
+              >
+                {testResult.success ? <CheckCircle className="h-5 w-5" /> : <AlertCircle className="h-5 w-5" />}
+                <p className="text-sm">{testResult.message}</p>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
-
-      {/* Test Results Card */}
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle>Test Results</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="bg-gray-100 p-4 rounded-md h-64 overflow-auto text-sm font-mono">
-            {results.length === 0 ? (
-              <p className="text-gray-500">No tests run yet.</p>
-            ) : (
-              results.map((result, index) => (
-                <p
-                  key={index}
-                  className={result.includes("FAILED") || result.includes("ERROR") ? "text-red-600" : "text-green-700"}
-                >
-                  {result}
-                </p>
-              ))
-            )}
-          </div>
-        </CardContent>
-      </Card>
     </div>
   )
 }
