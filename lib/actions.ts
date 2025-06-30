@@ -2,13 +2,14 @@
 
 import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
+import { headers, cookies } from "next/headers" // Moved to top
 
 import { createClient } from "@/lib/supabase/server"
 
 export async function signIn(formData: FormData) {
   const email = formData.get("email") as string
   const password = formData.get("password") as string
-  const supabase = createClient()
+  const supabase = createClient(cookies())
 
   const { error } = await supabase.auth.signInWithPassword({
     email,
@@ -26,7 +27,7 @@ export async function signUp(formData: FormData) {
   const origin = headers().get("origin")
   const email = formData.get("email") as string
   const password = formData.get("password") as string
-  const supabase = createClient()
+  const supabase = createClient(cookies())
 
   const { error } = await supabase.auth.signUp({
     email,
@@ -44,15 +45,13 @@ export async function signUp(formData: FormData) {
 }
 
 export async function signOut() {
-  const supabase = createClient()
+  const supabase = createClient(cookies())
   await supabase.auth.signOut()
   return redirect("/login")
 }
 
-import { headers } from "next/headers"
-
 export async function submitLeadForm(formData: FormData) {
-  const supabase = createClient()
+  const supabase = createClient(cookies())
 
   const formType = formData.get("form_type") as string
   const email = formData.get("email") as string
@@ -85,8 +84,9 @@ export async function submitLeadForm(formData: FormData) {
   return { success: true, message: "Form submitted successfully!" }
 }
 
-export async function submitReportForm(formData: FormData) {
-  const supabase = createClient()
+// Renamed from submitReportForm to submitFareReport
+export async function submitFareReport(prevState: any, formData: FormData) {
+  const supabase = createClient(cookies())
 
   const reportData = {
     first_name: formData.get("first_name") as string,
@@ -158,4 +158,21 @@ export async function submitReportForm(formData: FormData) {
 
   revalidatePath("/")
   return { success: true, message: "Report submitted successfully!" }
+}
+
+export async function testDatabaseConnection() {
+  const supabase = createClient(cookies())
+  try {
+    const { data, error } = await supabase.from("reports").select("id").limit(1)
+
+    if (error) {
+      console.error("Supabase connection test failed:", error)
+      return { success: false, message: `Connection failed: ${error.message}` }
+    }
+
+    return { success: true, message: "Supabase connection successful!" }
+  } catch (e: any) {
+    console.error("Supabase connection test failed (exception):", e)
+    return { success: false, message: `Connection failed: ${e.message}` }
+  }
 }

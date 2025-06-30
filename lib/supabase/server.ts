@@ -1,17 +1,15 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr"
-import { cookies } from "next/headers"
-import { cache } from "react"
+import type { cookies } from "next/headers"
 
-export const createClient = cache(() => {
-  const cookieStore = cookies()
+export function createClient(cookieStore: ReturnType<typeof cookies>) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
   if (!supabaseUrl) {
-    throw new Error("Missing environment variable: NEXT_PUBLIC_SUPABASE_URL")
+    throw new Error("Missing environment variable NEXT_PUBLIC_SUPABASE_URL")
   }
   if (!supabaseAnonKey) {
-    throw new Error("Missing environment variable: NEXT_PUBLIC_SUPABASE_ANON_KEY")
+    throw new Error("Missing environment variable NEXT_PUBLIC_SUPABASE_ANON_KEY")
   }
 
   return createServerClient(supabaseUrl, supabaseAnonKey, {
@@ -23,24 +21,24 @@ export const createClient = cache(() => {
         try {
           cookieStore.set({ name, value, ...options })
         } catch (error) {
-          // The `cookies().set()` method can only be called from a Server Component or Server Action.
-          // This error is typically not an issue if you're using a client component that relies on
-          // cookies.set() but is rendered on the server with a `use client` directive.
-          // For example, if you have a logout button in a client component and you want to clear
-          // the cookie on click, you would use `cookies().set()` in a Server Action called by the client component.
+          // The `cookies().set()` method can't be called from a Client Component.
+          // This can happen if you are trying to set a cookie from a Client Component
+          // that then gets called by a Server Component.
+          // For example, if you have a page with a `Form` component that uses a
+          // Server Action, and that Server Action calls `cookies().set()`, then
+          // this error will be triggered if the `Form` component is a Client Component.
+          // To work around this, you can pass the `cookies().set()` as a prop to the
+          // Client Component, or you can use a Server Component to set the cookie.
+          console.warn("Cookie set failed:", error)
         }
       },
       remove(name: string, options: CookieOptions) {
         try {
           cookieStore.set({ name, value: "", ...options })
         } catch (error) {
-          // The `cookies().set()` method can only be called from a Server Component or Server Action.
-          // This error is typically not an issue if you're using a client component that relies on
-          // cookies.set() but is rendered on the server with a `use client` directive.
-          // For example, if you have a logout button in a client component and you want to clear
-          // the cookie on click, you would use `cookies().set()` in a Server Action called by the client component.
+          console.warn("Cookie remove failed:", error)
         }
       },
     },
   })
-})
+}

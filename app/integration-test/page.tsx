@@ -1,25 +1,50 @@
-import { createClient } from "@/lib/supabase/server"
-import { redirect } from "next/navigation"
+"use client"
 
-export default async function IntegrationTestPage() {
-  const supabase = createClient()
+import { testDatabaseConnection } from "@/lib/actions"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { useState } from "react"
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+export default function IntegrationTestPage() {
+  const [connectionStatus, setConnectionStatus] = useState<string | null>(null)
+  const [loading, setLoading] = useState(false)
 
-  if (!user) {
-    return redirect("/login")
+  const handleTestConnection = async () => {
+    setLoading(true)
+    setConnectionStatus("Testing connection...")
+    const result = await testDatabaseConnection()
+    if (result.success) {
+      setConnectionStatus(`Success: ${result.message}`)
+    } else {
+      setConnectionStatus(`Failed: ${result.message}`)
+    }
+    setLoading(false)
   }
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen py-2">
-      <h1 className="text-2xl font-bold">Integration Test Page</h1>
-      <p className="mt-4">This page is for testing various integrations and functionalities.</p>
-      <p className="mt-2">User: {user.email}</p>
-      <form action="/auth/sign-out" method="post" className="mt-4">
-        <button className="px-4 py-2 text-white bg-red-500 rounded-md">Sign Out</button>
-      </form>
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4">
+      <Card className="w-full max-w-md">
+        <CardHeader>
+          <CardTitle className="text-center">Supabase Integration Test</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <p className="text-center text-gray-600">
+            Click the button below to test the connection to your Supabase database.
+          </p>
+          <Button onClick={handleTestConnection} disabled={loading} className="w-full">
+            {loading ? "Connecting..." : "Test Supabase Connection"}
+          </Button>
+          {connectionStatus && (
+            <div
+              className={`p-3 rounded-md text-center ${
+                connectionStatus.startsWith("Success") ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
+              }`}
+            >
+              {connectionStatus}
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   )
 }
