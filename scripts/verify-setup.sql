@@ -14,6 +14,18 @@ SELECT EXISTS (
    AND    table_name = 'reports'
 );
 
+-- Check columns in 'leads' table
+SELECT column_name, data_type, is_nullable
+FROM information_schema.columns
+WHERE table_schema = 'public' AND table_name = 'leads'
+ORDER BY ordinal_position;
+
+-- Check columns in 'reports' table
+SELECT column_name, data_type, is_nullable
+FROM information_schema.columns
+WHERE table_schema = 'public' AND table_name = 'reports'
+ORDER BY ordinal_position;
+
 -- Verify RLS is enabled for 'leads'
 SELECT relrowsecurity FROM pg_class WHERE relname = 'leads';
 
@@ -21,45 +33,27 @@ SELECT relrowsecurity FROM pg_class WHERE relname = 'leads';
 SELECT relrowsecurity FROM pg_class WHERE relname = 'reports';
 
 -- Verify policies for 'leads'
-SELECT policyname, permissive, roles, cmd
+SELECT policyname, permissive, roles, cmd, qual, with_check
 FROM pg_policies
 WHERE schemaname = 'public' AND tablename = 'leads';
 
 -- Verify policies for 'reports'
-SELECT policyname, permissive, roles, cmd
+SELECT policyname, permissive, roles, cmd, qual, with_check
 FROM pg_policies
 WHERE schemaname = 'public' AND tablename = 'reports';
 
--- Check for 'additional_context' column in 'reports'
-SELECT column_name, data_type
-FROM information_schema.columns
-WHERE table_schema = 'public'
-  AND table_name = 'reports'
-  AND column_name = 'additional_context';
+-- Test insert into leads (requires 'Allow public inserts on leads' policy)
+-- INSERT INTO leads (email, first_name, last_name, form_type)
+-- VALUES ('test@example.com', 'Test', 'User', 'waitlist');
+-- SELECT * FROM leads WHERE email = 'test@example.com';
 
--- Check for 'has_streeteasy_listing' column in 'reports'
-SELECT column_name, data_type
-FROM information_schema.columns
-WHERE table_schema = 'public'
-  AND table_name = 'reports'
-  AND column_name = 'has_streeteasy_listing';
+-- Test insert into reports (requires 'Allow public inserts on reports' policy)
+-- INSERT INTO reports (first_name, last_name, email, narrative)
+-- VALUES ('Report', 'User', 'report@example.com', 'This is a test report.');
+-- SELECT * FROM reports WHERE email = 'report@example.com';
 
--- Check for 'streeteasy_link' column in 'reports'
-SELECT column_name, data_type
-FROM information_schema.columns
-WHERE table_schema = 'public'
-  AND table_name = 'reports'
-  AND column_name = 'streeteasy_link';
+-- Test select from leads (requires 'Allow authenticated reads on leads' policy for authenticated users)
+-- SELECT * FROM leads LIMIT 1;
 
--- Check for 'form_type' column in 'leads'
-SELECT column_name, data_type
-FROM information_schema.columns
-WHERE table_schema = 'public'
-  AND table_name = 'leads'
-  AND column_name = 'form_type';
-
--- Check for 'leads_form_type_check' constraint
-SELECT conname
-FROM pg_constraint
-WHERE conrelid = 'public.leads'::regclass
-  AND conname = 'leads_form_type_check';
+-- Test select from reports (requires 'Allow authenticated reads on reports' policy for authenticated users)
+-- SELECT * FROM reports LIMIT 1;

@@ -1,111 +1,114 @@
 "use client"
+import { useState, useCallback } from "react"
 
-import type React from "react"
-
-import { useState, useEffect, useCallback } from "react"
-import { validateField } from "@/components/test-utils/form-validator"
-
-interface ValidationRules {
-  [key: string]: {
-    required?: boolean
-    minLength?: number
-    maxLength?: number
-    pattern?: string
-    patternMessage?: string
-    email?: boolean
-    min?: number
-    max?: number
-    checked?: boolean
-  }
+// Define a type for the form data structure
+interface LeadFormData {
+  email: string
+  first_name: string
+  last_name: string
+  phone?: string
+  form_type: "waitlist" | "schedule" | "report"
+  contact_time?: string
+  issue_snapshot?: string
+  mailing_list_consent?: boolean
+  // Add other fields as they become relevant for validation
 }
 
-interface FormErrors {
-  [key: string]: string | null
+// Define a type for validation errors
+type LeadFormErrors = {
+  [key in keyof LeadFormData]?: string
 }
 
-export function useLeadValidation<T extends Record<string, any>>(initialData: T, validationSchema: ValidationRules) {
-  const [formData, setFormData] = useState<T>(initialData)
-  const [errors, setErrors] = useState<FormErrors>({})
-  const [isTouched, setIsTouched] = useState<Record<keyof T, boolean>>(
-    Object.keys(initialData).reduce((acc, key) => ({ ...acc, [key]: false }), {} as Record<keyof T, boolean>),
-  )
+export function useLeadValidation() {
+  const [errors, setErrors] = useState<LeadFormErrors>({})
 
-  const handleChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-      const { name, value, type, checked } = e.target as HTMLInputElement
-      setFormData((prevData) => ({
-        ...prevData,
-        [name]: type === "checkbox" ? checked : value,
-      }))
-      setIsTouched((prevTouched) => ({
-        ...prevTouched,
-        [name]: true,
-      }))
-    },
-    [],
-  )
-
-  const handleSelectChange = useCallback((name: string, value: string | boolean) => {
-    setFormData((prevData) => ({
-      ...prevData,
-      [name]: value,
-    }))
-    setIsTouched((prevTouched) => ({
-      ...prevTouched,
-      [name]: true,
-    }))
+  const validateField = useCallback((fieldName: keyof LeadFormData, value: any): string | undefined => {
+    switch (fieldName) {
+      case "email":
+        if (!value || value.trim() === "") {
+          return "Email is required."
+        }
+        if (!/\S+@\S+\.\S+/.test(value)) {
+          return "Invalid email format."
+        }
+        break
+      case "first_name":
+        if (!value || value.trim() === "") {
+          return "First name is required."
+        }
+        break
+      case "last_name":
+        if (!value || value.trim() === "") {
+          return "Last name is required."
+        }
+        break
+      case "phone":
+        if (value && !/^\+?[0-9\s\-()]{7,20}$/.test(value)) {
+          // Basic phone number regex
+          return "Invalid phone number format."
+        }
+        break
+      case "form_type":
+        if (!value || !["waitlist", "schedule", "report"].includes(value)) {
+          return "Invalid form type."
+        }
+        break
+      case "contact_time":
+        // Add specific validation for contact_time if needed (e.g., time format)
+        break
+      case "issue_snapshot":
+        if (value && value.length > 500) {
+          return "Issue snapshot cannot exceed 500 characters."
+        }
+        break
+      // Add validation for other fields as they are added to LeadFormData
+      default:
+        break
+    }
+    return undefined // No error
   }, [])
 
-  const validateForm = useCallback(() => {
-    let isValid = true
-    const newErrors: FormErrors = {}
+  const validateForm = useCallback(
+    (formData: LeadFormData): boolean => {
+      let isValid = true
+      const newErrors: LeadFormErrors = {}
 
-    for (const key in validationSchema) {
-      const value = formData[key]
-      const rules = validationSchema[key]
-      const error = validateField(value, rules)
-      newErrors[key] = error
-      if (error) {
-        isValid = false
-      }
-    }
-    setErrors(newErrors)
-    return isValid
-  }, [formData, validationSchema])
+      // Validate all required fields
+      const requiredFields: Array<keyof LeadFormData> = ["email", "first_name", "last_name", "form_type"]
+      requiredFields.forEach((field) => {
+        const error = validateField(field, formData[field])
+        if (error) {
+          newErrors[field] = error
+          isValid = false
+        }
+      })
 
-  const validateFieldOnBlur = useCallback(
-    (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-      const { name, value, type, checked } = e.target as HTMLInputElement
-      const fieldRules = validationSchema[name]
-      if (fieldRules) {
-        const fieldValue = type === "checkbox" ? checked : value
-        const error = validateField(fieldValue, fieldRules)
-        setErrors((prevErrors) => ({
-          ...prevErrors,
-          [name]: error,
-        }))
+      // Validate optional fields if they are present
+      if (formData.phone !== undefined) {
+        const error = validateField("phone", formData.phone)
+        if (error) {
+          newErrors.phone = error
+          isValid = false
+        }
       }
-      setIsTouched((prevTouched) => ({
-        ...prevTouched,
-        [name]: true,
-      }))
+      if (formData.issue_snapshot !== undefined) {
+        const error = validateField("issue_snapshot", formData.issue_snapshot)
+        if (error) {
+          newErrors.issue_snapshot = error
+          isValid = false
+        }
+      }
+      // Add checks for other optional fields
+
+      setErrors(newErrors)
+      return isValid
     },
-    [validationSchema],
+    [validateField],
   )
 
-  // Validate all fields on initial load or when formData/validationSchema changes
-  useEffect(() => {
-    validateForm()
-  }, [formData, validationSchema, validateForm]) // Added validateForm to dependencies
+  const clearErrors = useCallback(() => {
+    setErrors({})
+  }, [])
 
-  return {
-    formData,
-    setFormData,
-    errors,
-    handleChange,
-    handleSelectChange,
-    validateForm,
-    isTouched,
-    validateFieldOnBlur,
-  }
+  return { errors, validateField, validateForm, clearErrors }
 }

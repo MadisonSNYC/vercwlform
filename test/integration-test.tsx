@@ -1,4 +1,103 @@
 "use client"
+import { render, screen, waitFor } from "@testing-library/react"
+import "@testing-library/jest-dom"
+import IntegrationTestPage from "../app/integration-test/page" // Adjust path as necessary
+import { createClient } from "@/lib/supabase/client" // Mock this import
+import { jest, describe, beforeEach, it, expect, afterEach } from "@jest/globals" // Import necessary Jest globals
+
+// Mock the Supabase client to control its behavior during tests
+jest.mock("@/lib/supabase/client", () => ({
+  createClient: jest.fn(() => ({
+    from: jest.fn(() => ({
+      select: jest.fn(() => ({
+        limit: jest.fn(() => ({
+          data: [{ id: 1, email: "test@example.com", first_name: "Test", last_name: "User" }],
+          error: null,
+        })),
+      })),
+      insert: jest.fn(() => ({
+        select: jest.fn(() => ({
+          data: [{ id: 2, email: "new@example.com", first_name: "New", last_name: "User" }],
+          error: null,
+        })),
+      })),
+    })),
+  })),
+}))
+
+describe("IntegrationTestPage", () => {
+  // Set up mock environment variables before each test
+  beforeEach(() => {
+    process.env.NEXT_PUBLIC_SUPABASE_URL = "http://localhost:54321"
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = "mock-anon-key"
+  })
+
+  // Clean up mock environment variables after each test
+  afterEach(() => {
+    delete process.env.NEXT_PUBLIC_SUPABASE_URL
+    delete process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    jest.clearAllMocks()
+  })
+
+  it('displays "Running tests..." initially', () => {
+    render(<IntegrationTestPage />)
+    expect(screen.getByText("Running tests...")).toBeInTheDocument()
+  })
+
+  it("displays success message if all tests pass", async () => {
+    render(<IntegrationTestPage />)
+
+    await waitFor(
+      () => {
+        expect(screen.getByText("All integration tests passed successfully!")).toBeInTheDocument()
+      },
+      { timeout: 3000 },
+    ) // Increased timeout for async operations
+  })
+
+  it("displays error message if database connection fails", async () => {
+    // Mock createClient to return an error for database connection
+    ;(createClient as jest.Mock).mockImplementationOnce(() => ({
+      from: jest.fn(() => ({
+        select: jest.fn(() => ({
+          limit: jest.fn(() => ({
+            data: null,
+            error: { message: "Network error" },
+          })),
+        })),
+      })),
+    }))
+
+    render(<IntegrationTestPage />)
+
+    await waitFor(
+      () => {
+        expect(
+          screen.getByText(/Integration test failed: Database connection failed: Network error/i),
+        ).toBeInTheDocument()
+      },
+      { timeout: 3000 },
+    )
+  })
+
+  it("displays error message if Supabase environment variables are not set", async () => {
+    delete process.env.NEXT_PUBLIC_SUPABASE_URL // Unset one variable
+
+    render(<IntegrationTestPage />)
+
+    await waitFor(
+      () => {
+        expect(
+          screen.getByText(/Integration test failed: Supabase environment variables are not set./i),
+        ).toBeInTheDocument()
+      },
+      { timeout: 3000 },
+    )
+  })
+
+  // You can add more specific tests here for insert, update, delete operations
+  // by mocking the respective Supabase client methods.
+})
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
@@ -9,10 +108,9 @@ import { CheckCircle, XCircle, Clock, Play, AlertTriangle, Database, RefreshCw }
 import { submitFareReport } from "@/lib/actions"
 import { LeadAnalytics } from "@/components/lead-analytics" // Adjust path as necessary
 import { LeadProgressIndicator } from "@/components/lead-progress-indicator" // Adjust path as necessary
-import "@testing-library/jest-dom"
 import { setupServer } from "msw/node"
 import { rest } from "msw"
-import { beforeAll, afterEach, afterAll } from "@jest/globals"
+import { beforeAll, afterAll } from "@jest/globals"
 
 interface TestResult {
   name: string
@@ -46,7 +144,6 @@ const server = setupServer(
 )
 
 beforeAll(() => server.listen())
-afterEach(() => server.resetHandlers())
 afterAll(() => server.close())
 
 export default function IntegrationTest() {

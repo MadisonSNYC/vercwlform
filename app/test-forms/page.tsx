@@ -1,5 +1,7 @@
 "use client"
 
+import type React from "react"
+
 import { useState, useEffect, useRef } from "react"
 import {
   Play,
@@ -15,13 +17,14 @@ import {
   EyeOff,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Checkbox } from "@/components/ui/checkbox"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { validateForm } from "@/components/test-utils/form-validator" // Assuming this path is correct
 
 interface TestResult {
   id: string
@@ -46,6 +49,16 @@ export default function FormTestingPage() {
   const [showDetails, setShowDetails] = useState<string[]>([])
   const [testResults, setTestResults] = useState<any[]>([])
   const iframeRef = useRef<HTMLIFrameElement>(null)
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    message: "",
+    subscribe: false,
+    gender: "",
+    country: "",
+  })
+  const [errors, setErrors] = useState<Record<string, string>>({})
+  const [submissionStatus, setSubmissionStatus] = useState("")
 
   const viewportSizes = {
     desktop: { width: "1200px", height: "800px" },
@@ -661,6 +674,58 @@ export default function FormTestingPage() {
     0,
   )
 
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { id, value, type, checked } = e.target
+    setFormData((prev) => ({
+      ...prev,
+      [id]: type === "checkbox" ? checked : value,
+    }))
+    // Clear error for the field as user types
+    if (errors[id]) {
+      setErrors((prev) => {
+        const newErrors = { ...prev }
+        delete newErrors[id]
+        return newErrors
+      })
+    }
+  }
+
+  const handleSelectChange = (value: string) => {
+    setFormData((prev) => ({ ...prev, country: value }))
+    if (errors.country) {
+      setErrors((prev) => {
+        const newErrors = { ...prev }
+        delete newErrors.country
+        return newErrors
+      })
+    }
+  }
+
+  const handleRadioChange = (value: string) => {
+    setFormData((prev) => ({ ...prev, gender: value }))
+    if (errors.gender) {
+      setErrors((prev) => {
+        const newErrors = { ...prev }
+        delete newErrors.gender
+        return newErrors
+      })
+    }
+  }
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    const validationErrors = validateForm(formData)
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors)
+      setSubmissionStatus("Please correct the errors in the form.")
+    } else {
+      setErrors({})
+      setSubmissionStatus("Form submitted successfully!")
+      console.log("Form Data:", formData)
+      // Here you would typically send data to a server
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -914,6 +979,91 @@ export default function FormTestingPage() {
                 <Button>Primary Button</Button>
                 <Button variant="outline">Outline Button</Button>
               </CardContent>
+            </Card>
+
+            {/* Test Form Card */}
+            <Card className="w-full max-w-md">
+              <CardHeader>
+                <CardTitle className="text-2xl font-bold text-center">Test Form</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleSubmit} className="space-y-6">
+                  <div>
+                    <Label htmlFor="name">Name</Label>
+                    <Input id="name" type="text" value={formData.name} onChange={handleChange} />
+                    {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
+                  </div>
+                  <div>
+                    <Label htmlFor="email">Email</Label>
+                    <Input id="email" type="email" value={formData.email} onChange={handleChange} />
+                    {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
+                  </div>
+                  <div>
+                    <Label htmlFor="message">Message</Label>
+                    <Textarea id="message" value={formData.message} onChange={handleChange} rows={4} />
+                    {errors.message && <p className="text-red-500 text-sm mt-1">{errors.message}</p>}
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="subscribe"
+                      checked={formData.subscribe}
+                      onCheckedChange={(checked) =>
+                        handleChange({ target: { id: "subscribe", type: "checkbox", checked } } as any)
+                      }
+                    />
+                    <Label htmlFor="subscribe">Subscribe to newsletter</Label>
+                  </div>
+                  <div>
+                    <Label>Gender</Label>
+                    <RadioGroup
+                      onValueChange={handleRadioChange}
+                      value={formData.gender}
+                      className="flex space-x-4 mt-2"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="male" id="male" />
+                        <Label htmlFor="male">Male</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="female" id="female" />
+                        <Label htmlFor="female">Female</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="other" id="other" />
+                        <Label htmlFor="other">Other</Label>
+                      </div>
+                    </RadioGroup>
+                    {errors.gender && <p className="text-red-500 text-sm mt-1">{errors.gender}</p>}
+                  </div>
+                  <div>
+                    <Label htmlFor="country">Country</Label>
+                    <Select onValueChange={handleSelectChange} value={formData.country}>
+                      <SelectTrigger id="country">
+                        <SelectValue placeholder="Select a country" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="usa">United States</SelectItem>
+                        <SelectItem value="canada">Canada</SelectItem>
+                        <SelectItem value="uk">United Kingdom</SelectItem>
+                        <SelectItem value="australia">Australia</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {errors.country && <p className="text-red-500 text-sm mt-1">{errors.country}</p>}
+                  </div>
+                  <Button type="submit" className="w-full">
+                    Submit
+                  </Button>
+                </form>
+              </CardContent>
+              <CardFooter className="flex flex-col items-center">
+                {submissionStatus && (
+                  <p
+                    className={`mt-4 text-center ${Object.keys(errors).length > 0 ? "text-red-600" : "text-green-600"}`}
+                  >
+                    {submissionStatus}
+                  </p>
+                )}
+              </CardFooter>
             </Card>
           </div>
         </div>

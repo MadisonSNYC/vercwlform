@@ -18,9 +18,16 @@ ALTER TABLE reports
   ADD COLUMN IF NOT EXISTS has_streeteasy_listing BOOLEAN DEFAULT FALSE,
   ADD COLUMN IF NOT EXISTS streeteasy_link TEXT;
 
--- Rename columns to match form field names
-ALTER TABLE reports RENAME COLUMN IF EXISTS has_street_easy_listing TO has_streeteasy_listing_old;
-ALTER TABLE reports RENAME COLUMN IF EXISTS street_easy_link TO streeteasy_link_old;
+-- Conditionally rename columns to match form field names
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='reports' AND column_name='has_street_easy_listing') THEN
+        ALTER TABLE reports RENAME COLUMN has_street_easy_listing TO has_streeteasy_listing_old;
+    END IF;
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='reports' AND column_name='street_easy_link') THEN
+        ALTER TABLE reports RENAME COLUMN street_easy_link TO streeteasy_link_old;
+    END IF;
+END $$;
 
 -- Add DCWP fee detail fields
 ALTER TABLE reports 

@@ -1,6 +1,6 @@
 "use client"
 
-import type * as React from "react"
+import React from "react"
 import {
   CartesianGrid,
   Line,
@@ -14,16 +14,29 @@ import {
   Area,
   AreaChart,
 } from "recharts"
+import { cn } from "@/lib/utils"
 
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
+import {
+  ChartContainer as RechartsChartContainer,
+  type ChartContainerProps as RechartsChartContainerProps,
+} from "@tremor/react"
 
 // Define types for common chart props
-type ChartProps = React.ComponentProps<typeof ChartContainer> & {
+type ChartProps = RechartsChartContainerProps & {
   data: Record<string, any>[]
   categories: string[]
   index: string
   type?: "line" | "bar" | "pie" | "radial" | "area"
 }
+
+const ChartContainer = React.forwardRef<HTMLDivElement, RechartsChartContainerProps>(({ className, ...props }, ref) => (
+  <RechartsChartContainer
+    ref={ref}
+    className={cn("flex aspect-video items-center justify-center", className)}
+    {...props}
+  />
+))
+ChartContainer.displayName = "ChartContainer"
 
 const Chart = ({ data, categories, index, type = "line", className, ...props }: ChartProps) => {
   const ChartComponent =
@@ -61,23 +74,10 @@ const Chart = ({ data, categories, index, type = "line", className, ...props }: 
   }
 
   return (
-    <ChartContainer
-      config={{
-        [index]: {
-          label: index,
-          color: "hsl(var(--primary))",
-        },
-        ...categories.reduce((acc, category) => {
-          acc[category] = { label: category, color: "hsl(var(--primary))" }
-          return acc
-        }, {}),
-      }}
-      className={className}
-      {...props}
-    >
+    <ChartContainer className={className} {...props}>
       <ChartComponent data={data}>
         <CartesianGrid vertical={false} />
-        <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
+        {/* <ChartTooltip cursor={false} content={<ChartTooltipContent />} /> */}
         {renderChartElements()}
       </ChartComponent>
     </ChartContainer>

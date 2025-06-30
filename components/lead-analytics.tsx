@@ -6,6 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   LineChart,
   PieChart,
+  BarChart,
+  Bar,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -22,12 +24,37 @@ interface LeadAnalyticsProps {
     totalLeads: number
     leadsByFormType: { name: string; value: number }[]
     leadsOverTime: { date: string; count: number }[]
+    name?: string
+    value?: number
   }
+  title?: string
+  dataKey?: string
 }
 
 const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042"]
 
-export function LeadAnalytics({ data }: LeadAnalyticsProps) {
+export function LeadAnalytics({ data, title, dataKey }: LeadAnalyticsProps) {
+  if (title && dataKey) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>{title}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={data} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="name" />
+              <YAxis />
+              <Tooltip />
+              <Bar dataKey={dataKey} fill="#8884d8" />
+            </BarChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
+    )
+  }
+
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
       <Card>

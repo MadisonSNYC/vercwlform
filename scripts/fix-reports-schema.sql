@@ -15,7 +15,7 @@ ADD COLUMN IF NOT EXISTS desired_outcome_other TEXT;
 
 -- Add 'violations' column if it does not exist, and ensure it's JSONB
 ALTER TABLE reports
-ADD COLUMN IF NOT EXISTS violations JSONB;
+ALTER COLUMN violations TYPE JSONB USING violations::JSONB;
 
 -- Add 'violation_others' column if it does not exist, and ensure it's JSONB
 ALTER TABLE reports
@@ -71,7 +71,7 @@ ADD COLUMN IF NOT EXISTS referral_source_other TEXT;
 
 -- Add 'document_info' column if it does not exist, and ensure it's JSONB
 ALTER TABLE reports
-ADD COLUMN IF NOT EXISTS document_info JSONB;
+ALTER COLUMN document_info TYPE JSONB USING document_info::JSONB;
 
 -- Add 'updated_at' column if it does not exist
 ALTER TABLE reports

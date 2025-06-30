@@ -4,13 +4,15 @@ import * as React from "react"
 import { Slot } from "@radix-ui/react-slot"
 import { type VariantProps, cva } from "class-variance-authority"
 import { PanelLeft } from "lucide-react"
+import { HomeIcon, LineChartIcon, Package2Icon, PanelLeftIcon, ShoppingCartIcon, UsersIcon } from "lucide-react"
+import Link from "next/link"
 
 import { useIsMobile } from "@/hooks/use-mobile"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
-import { Sheet, SheetContent } from "@/components/ui/sheet"
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 
@@ -130,7 +132,7 @@ const SidebarProvider = React.forwardRef<
 })
 SidebarProvider.displayName = "SidebarProvider"
 
-const Sidebar = React.forwardRef<
+const SidebarComponent = React.forwardRef<
   HTMLDivElement,
   React.ComponentProps<"div"> & {
     side?: "left" | "right"
@@ -220,7 +222,7 @@ const Sidebar = React.forwardRef<
     </div>
   )
 })
-Sidebar.displayName = "Sidebar"
+SidebarComponent.displayName = "SidebarComponent"
 
 const SidebarTrigger = React.forwardRef<React.ElementRef<typeof Button>, React.ComponentProps<typeof Button>>(
   ({ className, onClick, ...props }, ref) => {
@@ -616,7 +618,7 @@ const SidebarMenuSubButton = React.forwardRef<
 SidebarMenuSubButton.displayName = "SidebarMenuSubButton"
 
 export {
-  Sidebar,
+  SidebarComponent,
   SidebarContent,
   SidebarFooter,
   SidebarGroup,
@@ -640,4 +642,48 @@ export {
   SidebarSeparator,
   SidebarTrigger,
   useSidebar,
+}
+
+export function Sidebar() {
+  return (
+    <Sheet>
+      <SheetTrigger asChild>
+        <Button className="sm:hidden bg-transparent" size="icon" variant="outline">
+          <PanelLeftIcon className="h-5 w-5" />
+          <span className="sr-only">Toggle Menu</span>
+        </Button>
+      </SheetTrigger>
+      <SheetContent className="sm:max-w-xs" side="left">
+        <nav className="grid gap-6 text-lg font-medium">
+          <Link
+            className="group flex h-10 w-10 shrink-0 items-center justify-center gap-2 rounded-full bg-primary text-lg font-semibold text-primary-foreground md:text-base"
+            href="#"
+          >
+            <Package2Icon className="h-5 w-5 transition-all group-hover:scale-110" />
+            <span className="sr-only">Acme Inc</span>
+          </Link>
+          <Link className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground" href="#">
+            <HomeIcon className="h-5 w-5" />
+            Dashboard
+          </Link>
+          <Link className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground" href="#">
+            <ShoppingCartIcon className="h-5 w-5" />
+            Orders
+          </Link>
+          <Link className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground" href="#">
+            <Package2Icon className="h-5 w-5" />
+            Products
+          </Link>
+          <Link className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground" href="#">
+            <UsersIcon className="h-5 w-5" />
+            Customers
+          </Link>
+          <Link className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground" href="#">
+            <LineChartIcon className="h-5 w-5" />
+            Settings
+          </Link>
+        </nav>
+      </SheetContent>
+    </Sheet>
+  )
 }

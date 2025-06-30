@@ -1,90 +1,92 @@
+"use client"
+
 // components/test-utils/performance-monitor.ts
 
-/**
- * Measures the time taken to execute a given function.
- * @param func The function to measure.
- * @returns The execution time in milliseconds.
- */
-export function measureExecutionTime(func: Function): number {
-  const start = performance.now()
-  func()
-  const end = performance.now()
-  return end - start
-}
+// This function can be used to monitor web vital metrics in development.
+// It should not be used in production builds as it can add overhead.
+export function setupPerformanceMonitoring() {
+  if (process.env.NODE_ENV !== "production" && typeof window !== "undefined") {
+    console.log("Performance monitoring enabled in development mode.")
 
-/**
- * Monitors and logs various performance metrics for a web page.
- * This is a simplified example. For more advanced monitoring, consider Web Vitals.
- */
-export function monitorPagePerformance(): void {
-  if (typeof window === "undefined" || !window.performance) {
-    console.warn("Performance API not available in this environment.")
-    return
-  }
-
-  // Navigation Timing API
-  const navigationTiming = performance.getEntriesByType("navigation")[0] as PerformanceNavigationTiming
-  if (navigationTiming) {
-    console.log("--- Navigation Timing Metrics ---")
-    console.log(
-      `DOM Content Loaded: ${navigationTiming.domContentLoadedEventEnd - navigationTiming.domContentLoadedEventStart} ms`,
-    )
-    console.log(`Load Time: ${navigationTiming.loadEventEnd - navigationTiming.loadEventStart} ms`)
-    console.log(`Time to First Byte (TTFB): ${navigationTiming.responseStart - navigationTiming.requestStart} ms`)
-    console.log(
-      `First Contentful Paint (FCP) - (Approximation): ${navigationTiming.responseEnd - navigationTiming.fetchStart} ms`,
-    )
-  }
-
-  // Resource Timing API (e.g., for images, scripts, stylesheets)
-  const resources = performance.getEntriesByType("resource")
-  if (resources.length > 0) {
-    console.log("\n--- Resource Loading Metrics (Top 5 by duration) ---")
-    resources
-      .sort((a, b) => b.duration - a.duration)
-      .slice(0, 5)
-      .forEach((resource) => {
-        console.log(
-          `- ${resource.name.substring(0, 50)}... Type: ${resource.initiatorType}, Duration: ${resource.duration.toFixed(2)} ms`,
-        )
-      })
-  }
-
-  // Long Tasks API (if supported)
-  if ("PerformanceObserver" in window) {
-    const observer = new PerformanceObserver((list) => {
-      for (const entry of list.getEntries()) {
-        if (entry.entryType === "longtask") {
-          console.warn(`\n--- Long Task Detected ---`)
-          console.warn(
-            `Name: ${entry.name}, Duration: ${entry.duration.toFixed(2)} ms, Start Time: ${entry.startTime.toFixed(2)} ms`,
-          )
-          // You can add more details like attribution if available
+    // Monitor Largest Contentful Paint (LCP)
+    new PerformanceObserver((entryList) => {
+      for (const entry of entryList.getEntries()) {
+        if (entry.entryType === "largest-contentful-paint") {
+          console.log("LCP:", entry.renderTime || entry.loadTime)
         }
       }
-    })
-    try {
-      observer.observe({ type: "longtask", buffered: true })
-    } catch (e) {
-      console.warn("Long Tasks API not fully supported or blocked.")
+    }).observe({ type: "largest-contentful-paint", buffered: true })
+
+    // Monitor Cumulative Layout Shift (CLS)
+    new PerformanceObserver((entryList) => {
+      let cls = 0
+      for (const entry of entryList.getEntries()) {
+        if (!entry.hadRecentInput) {
+          cls += entry.value
+        }
+      }
+      console.log("CLS:", cls)
+    }).observe({ type: "layout-shift", buffered: true })
+
+    // Monitor First Input Delay (FID) - Note: FID is deprecated in favor of INP
+    // For modern monitoring, consider using Interaction to Next Paint (INP)
+    new PerformanceObserver((entryList) => {
+      for (const entry of entryList.getEntries()) {
+        if (entry.entryType === "first-input") {
+          console.log("FID:", entry.duration)
+        }
+      }
+    }).observe({ type: "first-input", buffered: true })
+
+    // Monitor Interaction to Next Paint (INP)
+    // This is a more comprehensive metric for responsiveness
+    if ("PerformanceEventTiming" in window) {
+      new PerformanceObserver((entryList) => {
+        let maxInp = 0
+        for (const entry of entryList.getEntries()) {
+          if (entry.entryType === "event" && entry.duration > maxInp) {
+            maxInp = entry.duration
+          }
+        }
+        console.log("INP (max observed):", maxInp)
+      }).observe({ type: "event", buffered: true, durationThreshold: 0 })
     }
+
+    // Monitor other useful metrics
+    window.addEventListener("load", () => {
+      setTimeout(() => {
+        const { navigation, paint } = performance.getEntriesByType("navigation")[0] as PerformanceNavigationTiming
+        const fcp = performance.getEntriesByName("first-contentful-paint")[0] as PerformancePaintTiming
+
+        if (navigation) {
+          console.log("TTFB (Time to First Byte):", navigation.responseStart - navigation.requestStart)
+          console.log(
+            "DOM Content Loaded:",
+            navigation.domContentLoadedEventEnd - navigation.domContentLoadedEventStart,
+          )
+          console.log("Load Time:", navigation.loadEventEnd - navigation.loadEventStart)
+        }
+        if (fcp) {
+          console.log("FCP (First Contentful Paint):", fcp.startTime)
+        }
+      }, 500) // Give some time for entries to be collected
+    })
   } else {
-    console.warn("PerformanceObserver (Long Tasks API) not supported in this browser.")
+    console.log("Performance monitoring is disabled in production mode.")
   }
-
-  console.log("\n--- General Performance Notes ---")
-  console.log("Consider using Lighthouse or Web Vitals for more comprehensive performance audits.")
 }
 
-/**
- * Measures and logs the time taken for a specific UI render or update.
- * This is a basic example. React DevTools Profiler is more suitable for React component profiling.
- * @param name A name for the measurement.
- * @param callback The function that triggers the UI render/update.
- */
-export function measureUIRenderTime(name: string, callback: () => void): void {
-  const start = performance.now()
-  callback()
-  const end = performance.now()
-  console.log(`UI Render Time for "${name}": ${(end - start).toFixed(2)} ms`)
+// Example usage (e.g., in your main App component or a specific page):
+/*
+import { setupPerformanceMonitoring } from '@/components/test-utils/performance-monitor';
+
+function MyApp() {
+  useEffect(() => {
+    setupPerformanceMonitoring();
+  }, []);
+
+  return (
+    // Your app content
+  );
 }
+*/
