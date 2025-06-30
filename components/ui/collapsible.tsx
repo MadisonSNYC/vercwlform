@@ -10,8 +10,8 @@ const Collapsible = CollapsiblePrimitive.Root
 const CollapsibleTrigger = CollapsiblePrimitive.Trigger
 
 const CollapsibleContent = React.forwardRef<
-  React.ElementRef<typeof CollapsiblePrimitive.CollapsibleContent>,
-  React.ComponentPropsWithoutRef<typeof CollapsiblePrimitive.CollapsibleContent>
+  React.ElementRef<typeof CollapsiblePrimitive.Content>,
+  React.ComponentPropsWithoutRef<typeof CollapsiblePrimitive.Content>
 >(({ className, children, ...props }, ref) => (
   <CollapsiblePrimitive.Content
     ref={ref}
@@ -21,10 +21,9 @@ const CollapsibleContent = React.forwardRef<
     )}
     {...props}
   >
-    {children}
+    <div className="flex flex-col pb-4 pt-0">{children}</div>
   </CollapsiblePrimitive.Content>
 ))
-
 CollapsibleContent.displayName = CollapsiblePrimitive.Content.displayName
 
 export { Collapsible, CollapsibleTrigger, CollapsibleContent }

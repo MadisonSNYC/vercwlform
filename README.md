@@ -1,226 +1,190 @@
 # NYC FARE Reporter
 
-*Fight Back Against Illegal Rental Fees in NYC*
-
-[![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?style=for-the-badge&logo=vercel)](https://vercel.com)
-[![Built with v0](https://img.shields.io/badge/Built%20with-v0.dev-black?style=for-the-badge)](https://v0.dev)
-
-## Overview
-
-NYC FARE (Fee Abuse Reporting Engine) empowers tenants to report illegal broker fees, discriminatory practices, and rental scams. This platform helps build a comprehensive database of rental violations to protect future renters and drive policy change.
+This is a Next.js application designed to help New York City renters report illegal broker fees and other housing violations under the FARE Act. It aims to streamline the reporting process, provide AI-enhanced drafting, and build a public database of violations for accountability.
 
 ## Features
 
-- **Dual Form System**: Waitlist signup and comprehensive violation reporting
-- **Responsive Design**: Mobile-first design with smooth animations
-- **Supabase Integration**: Secure data storage with Row Level Security
-- **Real-time Validation**: Live form validation and submission feedback
-- **TypeScript**: Full type safety throughout the application
-
-## Quick Start
-
-### 1. Clone and Install
-
-\`\`\`bash
-git clone <your-repo-url>
-cd nyc-fare-reporter
-npm install
-\`\`\`
-
-### 2. Environment Setup
-
-Copy the environment template:
-
-\`\`\`bash
-cp .env.example .env.local
-\`\`\`
-
-Fill in your Supabase credentials in `.env.local`:
-
-\`\`\`env
-NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key-here
-\`\`\`
-
-### 3. Supabase Setup
-
-1. Create a new project at [supabase.com](https://supabase.com)
-2. Go to Settings > API to get your URL and anon key
-3. Run the SQL script in the Supabase SQL Editor:
-
-\`\`\`sql
--- Copy and paste the contents of scripts/create-tables.sql
-\`\`\`
-
-### 4. Development
-
-First, run the development server:
-
-\`\`\`bash
-npm run dev          # Start development server
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-\`\`\`
-
-Visit [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
-
-## ✅ **Verify Connection**
-
-After setup, verify everything is working:
-
-### 1. Check Environment Variables
-Make sure your `.env.local` contains:
-\`\`\`env
-NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key-here
-\`\`\`
-
-### 2. Test Database Connection
-Run the verification script in Supabase SQL Editor:
-\`\`\`sql
--- Copy and paste contents of scripts/verify-setup.sql
-\`\`\`
-
-### 3. Test the Application
-1. Start the development server: `npm run dev`
-2. Look for the connection status indicator in the bottom-left corner
-3. Try submitting the waitlist form with a test email
-4. Check your Supabase dashboard to see if the data appears
-
-### 4. Common Issues
-
-**"Supabase environment variables not configured"**
-- Double-check your `.env.local` file
-- Restart your development server after adding environment variables
-
-**"Database error: relation does not exist"**
-- Run the SQL script from `scripts/create-tables.sql` in Supabase
-- Make sure you're using the correct database URL
-
-**"Failed to submit"**
-- Check the browser console for detailed error messages
-- Verify RLS policies are set up correctly
-
-## Database Schema
-
-### Tables
-
-- **waitlist**: Beta signup information
-  - `id` (UUID, Primary Key)
-  - `email` (TEXT, Required)
-  - `form_type` (TEXT, 'schedule' or 'waitlist')
-  - `contact_time` (TEXT, Optional)
-  - `issue_snapshot` (TEXT, Optional)
-  - `mailing_list_consent` (BOOLEAN)
-  - `created_at` (TIMESTAMP)
-
-- **reports**: Detailed violation reports
-  - `id` (UUID, Primary Key)
-  - Property information (address, price, bedrooms, etc.)
-  - Contact history and business details
-  - Violation categories (JSONB array)
-  - Personal information and consents
-  - `created_at` (TIMESTAMP)
-
-### Security
-
-- Row Level Security (RLS) enabled on all tables
-- Public insert policies for form submissions
-- Data validation at application and database level
-
-## Form Features
-
-### Waitlist Form
-- Simple email signup
-- Contact time preferences
-- Issue description (optional)
-- Mailing list consent
-
-### Full Report Form
-- Comprehensive violation reporting
-- Multiple violation categories
-- Property and business information
-- Contact history tracking
-- Required consent checkboxes
+- **Lead Capture Form (Page 1):** Collects basic user information and allows selection of report type (Live Report, Schedule Test, Just Updates).
+- **Live Report Form (Page 2):** Comprehensive form for reporting property details, involved parties, violation types, and a narrative of what happened.
+- **AI-Enhanced Reporting:** Option to use AI to refine the report narrative for clarity and legal precision.
+- **File Uploads:** Allows users to upload supporting documents.
+- **Direct Government Filing:** Designed to submit reports directly to NYC DCWP and NYS Department of State.
+- **Public Accountability:** Anonymized data contributes to a public dashboard of violation patterns.
+- **Schedule Your Report Later:** Option for users to schedule a time for assistance with filing their report.
+- **Waitlist:** For users who just want updates on the project's launch.
 
 ## Tech Stack
 
-- **Framework**: Next.js 15 with App Router
-- **Database**: Supabase (PostgreSQL)
-- **Styling**: Tailwind CSS
-- **UI Components**: Radix UI primitives
-- **Icons**: Lucide React
-- **TypeScript**: Full type safety
-- **Deployment**: Vercel
+- **Framework:** Next.js (App Router)
+- **Styling:** Tailwind CSS
+- **Components:** Shadcn/ui
+- **Database:** PostgreSQL (via Supabase)
+- **Authentication:** Supabase Auth
+- **Server Actions:** For handling form submissions and database interactions.
+- **AI:** Integration with AI models for report refinement.
+
+## Project Structure
+
+\`\`\`
+.
+├── app/
+│   ├── api/
+│   │   └── health/
+│   │       └── route.ts         # Health check API route
+│   ├── integration-test/
+│   │   └── page.tsx             # Integration test page
+│   ├── test-forms/
+│   │   ├── layout.tsx           # Layout for test forms
+│   │   └── page.tsx             # Page for testing various form components
+│   ├── test/
+│   │   └── page.tsx             # General test page
+│   ├── globals.css              # Global CSS styles
+│   ├── layout.tsx               # Root layout for the application
+│   └── page.tsx                 # Main application page (landing page and form)
+├── components/
+│   ├── icons/
+│   │   ├── check-icon.tsx       # Checkmark icon component
+│   │   └── tiktok-icon.tsx      # TikTok icon component
+│   ├── ui/                      # Shadcn/ui components (accordion, button, input, etc.)
+│   └── ...                      # Other custom components (lead-analytics, lead-progress-indicator)
+├── hooks/
+│   ├── use-lead-validation.ts   # Custom hook for lead form validation
+│   ├── use-mobile.tsx           # Custom hook for mobile detection
+│   └── use-toast.ts             # Custom hook for toast notifications
+├── lib/
+│   ├── actions.ts               # Server Actions for form submissions
+│   ├── supabase/                # Supabase client setup
+│   │   ├── client.ts
+│   │   └── server.ts
+│   └── utils.ts                 # Utility functions (e.g., cn for Tailwind classes)
+├── public/                      # Static assets (images, favicons)
+├── scripts/                     # SQL scripts for database schema management
+│   ├── create-tables.sql        # Initial table creation script
+│   ├── update-schema.sql        # Schema update scripts
+│   └── ...
+├── styles/
+│   └── globals.css              # Additional global styles
+├── tailwind.config.ts           # Tailwind CSS configuration
+├── tsconfig.json                # TypeScript configuration
+└── ...                          # Other configuration files (next.config.mjs, postcss.config.mjs)
+\`\`\`
 
 ## Development
 
-### Available Scripts
+1.  **Install Dependencies:**
+    \`\`\`bash
+    npm install
+    # or
+    yarn install
+    \`\`\`
 
-\`\`\`bash
-npm run dev          # Start development server
-npm run build        # Build for production
-npm run start        # Start production server
-npm run lint         # Run ESLint
-npm run type-check   # Run TypeScript compiler
-\`\`\`
+2.  **Set up Environment Variables:**
+    Copy `.env.example` to `.env.local` and fill in your Supabase credentials.
+    \`\`\`bash
+    cp .env.example .env.local
+    \`\`\`
 
-### Project Structure
+3.  **Run Database Migrations (Supabase):**
+    Ensure your Supabase project is set up and connect to it. You can run the SQL scripts in the `scripts/` directory.
+    For example, to create initial tables:
+    \`\`\`bash
+    # Connect to your Supabase database using psql or a GUI tool
+    # Then execute the SQL files:
+    # \i scripts/create-tables.sql
+    # \i scripts/update-schema.sql
+    \`\`\`
+    *Note: The `scripts/fix-reports-schema-complete.sql` and `scripts/update-reports-schema-v2.sql` are for specific schema updates and should be run in order if applicable to your Supabase project.*
 
-\`\`\`
-├── app/
-│   ├── auth/           # Authentication pages
-│   ├── globals.css     # Global styles
-│   ├── layout.tsx      # Root layout
-│   └── page.tsx        # Main landing page
-├── components/
-│   └── ui/             # Reusable UI components
-├── lib/
-│   ├── actions.ts      # Server actions
-│   ├── supabase/       # Supabase configuration
-│   └── utils.ts        # Utility functions
-├── scripts/
-│   └── create-tables.sql # Database setup
-└── public/             # Static assets
-\`\`\`
+4.  **Run the Development Server:**
+    \`\`\`bash
+    npm run dev
+    # or
+    yarn dev
+    \`\`\`
+    Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+
+## Database Schema (Simplified)
+
+The primary tables involved are `vercel` (formerly `leads`) and `reports`.
+
+### `vercel` Table (formerly `leads`)
+
+Stores lead capture information.
+
+| Column             | Type     | Constraints                               | Description                               |
+| :----------------- | :------- | :---------------------------------------- | :---------------------------------------- |
+| `id`               | `uuid`   | `PRIMARY KEY`, `DEFAULT gen_random_uuid()` | Unique identifier for the lead            |
+| `created_at`       | `timestamptz` | `DEFAULT now()`                           | Timestamp of creation                     |
+| `first_name`       | `text`   | `NOT NULL`                                | User's first name                         |
+| `last_name`        | `text`   | `NOT NULL`                                | User's last name                          |
+| `email`            | `text`   | `NOT NULL`, `UNIQUE`, `CHECK (email LIKE 'vercel%')` | User's email, must start with "vercel"    |
+| `phone`            | `text`   | `NULLABLE`                                | User's phone number                       |
+| `form_type`        | `text`   | `NOT NULL`                                | Type of form submitted (e.g., 'waitlist', 'report', 'schedule') |
+| `referral_source`  | `text`   | `NULLABLE`                                | How the user found the platform           |
+| `mailing_list_consent` | `boolean` | `DEFAULT FALSE`                           | Consent to receive mailing list updates   |
+
+### `reports` Table
+
+Stores detailed report information.
+
+| Column             | Type     | Constraints                               | Description                               |
+| :----------------- | :------- | :---------------------------------------- | :---------------------------------------- |
+| `id`               | `uuid`   | `PRIMARY KEY`, `DEFAULT gen_random_uuid()` | Unique identifier for the report          |
+| `created_at`       | `timestamptz` | `DEFAULT now()`                           | Timestamp of creation                     |
+| `user_email`       | `text`   | `NOT NULL`                                | Email of the user submitting the report   |
+| `user_phone`       | `text`   | `NULLABLE`                                | Phone of the user submitting the report   |
+| `preferred_contact`| `text`   | `NULLABLE`                                | Preferred contact method                  |
+| `is_veteran`       | `boolean`| `DEFAULT FALSE`                           | Whether the user is a veteran             |
+| `property_info_type`| `text`   | `NULLABLE`                                | Type of property info (streeteasy/manual) |
+| `streeteasy_link`  | `text`   | `NULLABLE`                                | StreetEasy listing URL                    |
+| `manual_address`   | `text`   | `NULLABLE`                                | Manually entered address                  |
+| `manual_price`     | `text`   | `NULLABLE`                                | Manually entered price                    |
+| `manual_unit`      | `text`   | `NULLABLE`                                | Manually entered unit                     |
+| `manual_bedrooms`  | `text`   | `NULLABLE`                                | Manually entered bedrooms                 |
+| `manual_bathrooms` | `text`   | `NULLABLE`                                | Manually entered bathrooms                |
+| `borough`          | `text`   | `NULLABLE`                                | Borough of the property                   |
+| `neighborhood`     | `text`   | `NULLABLE`                                | Neighborhood of the property              |
+| `who_reporting`    | `text`   | `NULLABLE`                                | Who the report is about (management/agent/brokerage) |
+| `management_company_name` | `text` | `NULLABLE`                            | Name of management company                |
+| `agent_first_name` | `text`   | `NULLABLE`                                | Agent's first name                        |
+| `agent_last_name`  | `text`   | `NULLABLE`                                | Agent's last name                         |
+| `brokerage_name`   | `text`   | `NULLABLE`                                | Brokerage name                            |
+| `business_address` | `text`   | `NULLABLE`                                | Business address                          |
+| `business_phone`   | `text`   | `NULLABLE`                                | Business phone                            |
+| `business_email`   | `text`   | `NULLABLE`                                | Business email                            |
+| `business_website` | `text`   | `NULLABLE`                                | Business website                          |
+| `business_license` | `text`   | `NULLABLE`                                | Business license                          |
+| `brokerage_for_agent` | `text` | `NULLABLE`                                | Brokerage associated with agent           |
+| `contacted_business` | `boolean`| `DEFAULT FALSE`                           | Whether business was contacted            |
+| `employee_name`    | `text`   | `NULLABLE`                                | Name of employee contacted                |
+| `what_happened`    | `text`   | `NULLABLE`                                | Description of what happened              |
+| `outcome`          | `text`   | `NULLABLE`                                | Outcome of the incident                   |
+| `outcome_chips`    | `jsonb`  | `DEFAULT '[]'::jsonb`                     | JSON array of outcome chips               |
+| `outcome_other_text` | `text`   | `NULLABLE`                                | Other outcome details                     |
+| `violations`       | `jsonb`  | `DEFAULT '[]'::jsonb`                     | JSON array of selected violations         |
+| `violation_other_texts` | `jsonb` | `DEFAULT '{}'::jsonb`                     | JSON object for other violation details   |
+| `illegal_broker_fee_charged` | `boolean` | `NULLABLE`                     | Illegal broker fee charged                |
+| `requirement_to_use_broker` | `boolean` | `NULLABLE`                      | Requirement to use broker                 |
+| `fees_not_disclosed` | `boolean` | `NULLABLE`                             | Fees not disclosed                        |
+| `fees_not_disclosed_text` | `text` | `NULLABLE`                            | Details for fees not disclosed            |
+| `improper_fees_in_ad` | `boolean` | `NULLABLE`                            | Improper fees in ad                       |
+| `improper_fees_in_ad_url` | `text` | `NULLABLE`                            | URL for improper fees in ad               |
+| `fee_charges`      | `jsonb`  | `DEFAULT '[]'::jsonb`                     | JSON array of fee charges                 |
+| `fee_charges_other`| `text`   | `NULLABLE`                                | Other fee charges details                 |
+| `document_info`    | `jsonb`  | `DEFAULT '[]'::jsonb`                     | JSON array of uploaded document info      |
+| `ai_refinement_option` | `text` | `DEFAULT 'refine'`                        | AI refinement option                      |
+| `report_description` | `text`   | `NULLABLE`                                | AI-generated report description           |
+| `narrative`        | `text`   | `NOT NULL`                                | User's narrative of the incident          |
+| `additional_notes` | `text`   | `NULLABLE`                                | Additional notes                          |
+| `desired_outcome`  | `jsonb`  | `DEFAULT '[]'::jsonb`                     | JSON array of desired outcomes            |
+| `desired_outcome_other` | `text` | `NULLABLE`                            | Other desired outcome details             |
+| `resend_report_to_me` | `boolean` | `DEFAULT FALSE`                        | Option to resend report to user           |
+| `dcwp_consent`     | `boolean`| `DEFAULT FALSE`                           | Consent for DCWP submission               |
+| `proxy_consent`    | `boolean`| `DEFAULT FALSE`                           | Consent for proxy submission              |
+| `submitted`        | `boolean`| `DEFAULT FALSE`                           | Submission status                         |
+| `best_time_to_reach_you` | `text` | `NULLABLE`                            | Best time to reach user for scheduling    |
+| `brief_issue_snapshot` | `text` | `NULLABLE`                            | Brief snapshot of the issue for scheduling|
 
 ## Contributing
 
-This project is part of the NYC housing advocacy effort. Contributions are welcome!
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
-
-## License
-
-MIT License - see LICENSE file for details.
-
-## Support
-
-For questions or support, please open an issue on GitHub or contact the development team.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+We welcome contributions! Please feel free to open issues or submit pull requests.

@@ -1,30 +1,63 @@
 // components/test-utils/form-validator.ts
-export function validateForm(
-  formData: Record<string, any>,
-  rules: Record<string, (value: any) => string | null>,
-): Record<string, string> {
-  const errors: Record<string, string> = {}
+// This is a simplified client-side form validation utility for testing purposes.
+// In a real application, you might use a library like Zod or React Hook Form.
 
-  for (const key in rules) {
-    if (rules.hasOwnProperty(key)) {
-      const rule = rules[key]
-      const value = formData[key]
-      const error = rule(value)
-      if (error) {
-        errors[key] = error
+interface ValidationRules {
+  [key: string]: {
+    required?: boolean
+    minLength?: number
+    maxLength?: number
+    pattern?: RegExp
+    custom?: (value: any) => string | null
+  }
+}
+
+export function validateForm(formData: Record<string, any>, rules: ValidationRules): Record<string, string | null> {
+  const errors: Record<string, string | null> = {}
+
+  for (const field in rules) {
+    const value = formData[field]
+    const fieldRules = rules[field]
+
+    // Required check
+    if (
+      fieldRules.required &&
+      (value === null || value === undefined || (typeof value === "string" && value.trim() === ""))
+    ) {
+      errors[field] = `${field} is required.`
+      continue // Move to next field if required check fails
+    }
+
+    // Only apply further checks if value is not empty (unless it's a specific case)
+    if (value !== null && value !== undefined && (typeof value !== "string" || value.trim() !== "")) {
+      // MinLength check
+      if (fieldRules.minLength && typeof value === "string" && value.length < fieldRules.minLength) {
+        errors[field] = `${field} must be at least ${fieldRules.minLength} characters long.`
+      }
+
+      // MaxLength check
+      if (fieldRules.maxLength && typeof value === "string" && value.length > fieldRules.maxLength) {
+        errors[field] = `${field} must be no more than ${fieldRules.maxLength} characters long.`
+      }
+
+      // Pattern check
+      if (fieldRules.pattern && typeof value === "string" && !fieldRules.pattern.test(value)) {
+        errors[field] = `Invalid ${field} format.`
+      }
+
+      // Custom validation
+      if (fieldRules.custom) {
+        const customError = fieldRules.custom(value)
+        if (customError) {
+          errors[field] = customError
+        }
       }
     }
   }
+
   return errors
 }
 
-// Example validation rules
-export const required = (value: any) =>
-  value === null || value === undefined || value === "" || (Array.isArray(value) && value.length === 0)
-    ? "This field is required."
-    : null
-export const isEmail = (value: string) =>
-  value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value) ? "Invalid email address." : null
-export const minLength = (min: number) => (value: string) =>
-  value && value.length < min ? `Must be at least ${min} characters.` : null
-export const isNumeric = (value: string) => (value && !/^\d+$/.test(value) ? "Must be a number." : null)
+export function hasErrors(errors: Record<string, string | null>): boolean {
+  return Object.values(errors).some((error) => error !== null)
+}

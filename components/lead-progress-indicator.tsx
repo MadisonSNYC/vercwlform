@@ -1,32 +1,31 @@
 "use client"
 
 import { Progress } from "@/components/ui/progress"
-import { usePathname } from "next/navigation"
-import { useEffect, useState } from "react"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
-export function LeadProgressIndicator() {
-  const pathname = usePathname()
-  const [progress, setProgress] = useState(0)
+interface LeadProgressIndicatorProps {
+  currentStep: number
+  totalSteps: number
+  title?: string
+}
 
-  useEffect(() => {
-    // This is a simplified example. In a real app, you'd map specific paths
-    // or form states to progress percentages.
-    if (pathname === "/test-forms") {
-      setProgress(33)
-    } else if (pathname === "/test-forms/page-2") {
-      setProgress(66)
-    } else if (pathname === "/thank-you") {
-      setProgress(100)
-    } else {
-      setProgress(0)
-    }
-  }, [pathname])
+export function LeadProgressIndicator({ currentStep, totalSteps, title }: LeadProgressIndicatorProps) {
+  const progress = (currentStep / totalSteps) * 100
 
   return (
-    <div className="w-full max-w-2xl mb-8">
-      <h2 className="text-xl font-semibold mb-2">Form Progress</h2>
-      <Progress value={progress} className="w-full" />
-      <p className="text-sm text-gray-500 mt-2">{progress}% Complete</p>
-    </div>
+    <Card className="w-full max-w-md mx-auto">
+      <CardHeader>
+        <CardTitle>{title || "Form Progress"}</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="flex items-center gap-4">
+          <Progress value={progress} className="w-full" />
+          <span className="text-sm font-medium">{`${Math.round(progress)}%`}</span>
+        </div>
+        <p className="text-sm text-gray-500 mt-2">
+          Step {currentStep} of {totalSteps}
+        </p>
+      </CardContent>
+    </Card>
   )
 }

@@ -1,46 +1,55 @@
 // components/test-utils/performance-monitor.ts
-export function startPerformanceMonitor() {
-  console.log("Performance monitoring started.")
+// This is a basic utility for monitoring component rendering performance.
+// In a real application, you might use React Profiler or browser performance APIs.
+
+let renderCounts: { [key: string]: number } = {}
+let renderTimes: { [key: string]: number[] } = {}
+
+export function startMonitoring(componentName: string) {
   if (typeof window !== "undefined" && window.performance) {
-    window.performance.mark("start_app_load")
+    window.performance.mark(`${componentName}-start`)
   }
 }
 
-export function endPerformanceMonitor() {
+export function endMonitoring(componentName: string) {
   if (typeof window !== "undefined" && window.performance) {
-    window.performance.mark("end_app_load")
-    window.performance.measure("app_load_time", "start_app_load", "end_app_load")
+    window.performance.mark(`${componentName}-end`)
+    window.performance.measure(`${componentName}-render`, `${componentName}-start`, `${componentName}-end`)
 
-    const measures = window.performance.getEntriesByName("app_load_time")
-    if (measures.length > 0) {
-      const appLoadTime = measures[0].duration
-      console.log(`App Load Time: ${appLoadTime.toFixed(2)} ms`)
+    const measure = window.performance.getEntriesByName(`${componentName}-render`).pop()
+    if (measure) {
+      const duration = measure.duration
+
+      renderCounts[componentName] = (renderCounts[componentName] || 0) + 1
+      renderTimes[componentName] = renderTimes[componentName] || []
+      renderTimes[componentName].push(duration)
+
+      console.log(`[Perf] ${componentName} rendered in ${duration.toFixed(2)} ms.`)
     }
+  }
+}
 
-    // Clear marks and measures to avoid cluttering performance buffer
+export function getPerformanceReport() {
+  const report: { [key: string]: { count: number; avgTime: string; totalTime: string } } = {}
+  for (const componentName in renderCounts) {
+    const times = renderTimes[componentName]
+    const totalTime = times.reduce((sum, time) => sum + time, 0)
+    const avgTime = totalTime / times.length
+    report[componentName] = {
+      count: renderCounts[componentName],
+      avgTime: `${avgTime.toFixed(2)} ms`,
+      totalTime: `${totalTime.toFixed(2)} ms`,
+    }
+  }
+  return report
+}
+
+export function resetPerformanceMonitor() {
+  renderCounts = {}
+  renderTimes = {}
+  if (typeof window !== "undefined" && window.performance) {
     window.performance.clearMarks()
     window.performance.clearMeasures()
   }
-  console.log("Performance monitoring ended.")
-}
-
-export function measureFunctionPerformance<T extends (...args: any[]) => any>(func: T, name: string): T {
-  return ((...args: Parameters<T>): ReturnType<T> => {
-    if (typeof window !== "undefined" && window.performance) {
-      window.performance.mark(`${name}_start`)
-      const result = func(...args)
-      window.performance.mark(`${name}_end`)
-      window.performance.measure(name, `${name}_start`, `${name}_end`)
-      const measures = window.performance.getEntriesByName(name)
-      if (measures.length > 0) {
-        console.log(`Function "${name}" took: ${measures[0].duration.toFixed(2)} ms`)
-      }
-      window.performance.clearMarks(`${name}_start`)
-      window.performance.clearMarks(`${name}_end`)
-      window.performance.clearMeasures(name)
-      return result
-    } else {
-      return func(...args)
-    }
-  }) as T
+  console.log("[Perf] Performance monitor reset.")
 }

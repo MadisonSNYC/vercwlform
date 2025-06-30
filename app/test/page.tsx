@@ -1,61 +1,133 @@
 "use client"
 
-import { useEffect, useState } from "react"
-import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
-import Link from "next/link"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import { Checkbox } from "@/components/ui/checkbox"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { useState } from "react"
 
 export default function TestPage() {
-  const [testResult, setTestResult] = useState("Running tests...")
-  const supabase = createClient()
-
-  useEffect(() => {
-    async function runTests() {
-      try {
-        // Test database connection
-        const { data, error: dbError } = await supabase.from("leads").select("*").limit(1)
-        if (dbError) {
-          throw new Error(`Database connection failed: ${dbError.message}`)
-        }
-        console.log("Database connection successful:", data)
-
-        // Test environment variables
-        if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-          throw new Error("Supabase environment variables are not set.")
-        }
-        console.log("Supabase environment variables are set.")
-
-        // Test a simple insert (optional, requires RLS policy for public inserts)
-        // const { data: insertData, error: insertError } = await supabase.from('leads').insert({
-        //   email: `test-${Date.now()}@example.com`,
-        //   first_name: 'Test',
-        //   last_name: 'User',
-        //   form_type: 'waitlist'
-        // }).select()
-        // if (insertError) {
-        //   throw new Error(`Insert test failed: ${insertError.message}`)
-        // }
-        // console.log('Insert test successful:', insertData)
-
-        setTestResult("All integration tests passed successfully!")
-      } catch (error: any) {
-        setTestResult(`Integration test failed: ${error.message}`)
-        console.error("Integration test error:", error)
-      }
-    }
-
-    runTests()
-  }, [])
+  const [inputValue, setInputValue] = useState("")
+  const [textareaValue, setTextareaValue] = useState("")
+  const [checkboxValue, setCheckboxValue] = useState(false)
+  const [radioValue, setRadioValue] = useState("option1")
+  const [selectValue, setSelectValue] = useState("apple")
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-24">
-      <h1 className="text-4xl font-bold mb-8">Test Page</h1>
-      <p className="mb-4">This is a simple test page.</p>
-      <p className="text-lg text-center mb-4">{testResult}</p>
-      <p className="mt-4 text-sm text-gray-600">Check the browser console for detailed logs.</p>
-      <Button asChild>
-        <Link href="/">Go back to Home</Link>
-      </Button>
-    </main>
+    <div className="container mx-auto p-4">
+      <h1 className="text-3xl font-bold mb-6">Component Test Page</h1>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {/* Button Examples */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Buttons</CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-wrap gap-2">
+            <Button>Default</Button>
+            <Button variant="secondary">Secondary</Button>
+            <Button variant="destructive">Destructive</Button>
+            <Button variant="outline">Outline</Button>
+            <Button variant="ghost">Ghost</Button>
+            <Button variant="link">Link</Button>
+          </CardContent>
+        </Card>
+
+        {/* Input Example */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Input</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <Label htmlFor="test-input">Text Input</Label>
+            <Input
+              id="test-input"
+              placeholder="Enter text"
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+            />
+            <p className="text-sm text-gray-500">Value: {inputValue}</p>
+          </CardContent>
+        </Card>
+
+        {/* Textarea Example */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Textarea</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <Label htmlFor="test-textarea">Textarea</Label>
+            <Textarea
+              id="test-textarea"
+              placeholder="Enter multi-line text"
+              value={textareaValue}
+              onChange={(e) => setTextareaValue(e.target.value)}
+            />
+            <p className="text-sm text-gray-500">Value: {textareaValue}</p>
+          </CardContent>
+        </Card>
+
+        {/* Checkbox Example */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Checkbox</CardTitle>
+          </CardHeader>
+          <CardContent className="flex items-center space-x-2">
+            <Checkbox
+              id="test-checkbox"
+              checked={checkboxValue}
+              onCheckedChange={(checked) => setCheckboxValue(!!checked)}
+            />
+            <Label htmlFor="test-checkbox">Accept terms</Label>
+            <p className="text-sm text-gray-500">Checked: {checkboxValue ? "Yes" : "No"}</p>
+          </CardContent>
+        </Card>
+
+        {/* RadioGroup Example */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Radio Group</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <RadioGroup value={radioValue} onValueChange={setRadioValue}>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="option1" id="r1" />
+                <Label htmlFor="r1">Option 1</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="option2" id="r2" />
+                <Label htmlFor="r2">Option 2</Label>
+              </div>
+            </RadioGroup>
+            <p className="text-sm text-gray-500">Selected: {radioValue}</p>
+          </CardContent>
+        </Card>
+
+        {/* Select Example */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Select</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <Label htmlFor="test-select">Choose a fruit</Label>
+            <Select value={selectValue} onValueChange={setSelectValue}>
+              <SelectTrigger id="test-select" className="w-[180px]">
+                <SelectValue placeholder="Select a fruit" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="apple">Apple</SelectItem>
+                <SelectItem value="banana">Banana</SelectItem>
+                <SelectItem value="orange">Orange</SelectItem>
+              </SelectContent>
+            </Select>
+            <p className="text-sm text-gray-500">Selected: {selectValue}</p>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
   )
 }
