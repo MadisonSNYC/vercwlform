@@ -42,8 +42,8 @@ async function sendLeadNurturingEmail(leadData: LeadData) {
   return emailContent[leadData.formType as keyof typeof emailContent]
 }
 
-// Add function to test database connection
-async function testDatabaseConnection() {
+// Corrected: Export the function
+export async function testDatabaseConnection() {
   try {
     const supabase = createClient()
 

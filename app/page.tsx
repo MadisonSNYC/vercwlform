@@ -6,6 +6,10 @@ import { useState, useEffect, useMemo, startTransition } from "react"
 import { submitFareReport } from "@/lib/actions"
 import { useActionState } from "react"
 import { useLeadValidation } from "@/hooks/use-lead-validation"
+import Link from "next/link"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { ArrowRightIcon, ExternalLinkIcon, GithubIcon, InstagramIcon, LinkedinIcon, YoutubeIcon } from "lucide-react"
+import { TikTokIcon } from "@/components/icons/TikTokIcon" // Assuming you have this icon component
 
 // Define a comprehensive type for the entire form state
 interface FullFormState {
@@ -132,12 +136,6 @@ const feeChargeOptions = [
   "Credit Check Fee > $20",
   "Other",
 ]
-
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Separator } from "@/components/ui/separator"
-import Image from "next/image"
 
 export default function Home() {
   const [scrollY, setScrollY] = useState(0)
@@ -597,178 +595,207 @@ export default function Home() {
 
   return (
     <div className="flex flex-col min-h-screen">
-      <header className="bg-gradient-to-r from-blue-600 to-purple-600 text-white py-12 px-4 text-center">
-        <div className="container mx-auto">
-          <h1 className="text-5xl font-extrabold mb-4">NYC FARE Reporter</h1>
-          <p className="text-xl mb-8">Empowering tenants and buyers to report illegal real estate practices in NYC.</p>
-          <div className="flex justify-center space-x-4">
-            <Button asChild size="lg" className="bg-white text-blue-600 hover:bg-gray-100">
-              <Link href="/report">File a Report</Link>
-            </Button>
-            <Button
-              asChild
-              size="lg"
-              variant="outline"
-              className="border-white text-white hover:bg-white hover:text-blue-600 bg-transparent"
-            >
-              <Link href="/waitlist">Join Waitlist</Link>
-            </Button>
-          </div>
-        </div>
+      <header className="px-4 lg:px-6 h-14 flex items-center">
+        <Link className="flex items-center justify-center" href="#">
+          <span className="sr-only">NYC FARE Reporter</span>
+        </Link>
+        <nav className="ml-auto flex gap-4 sm:gap-6">
+          <Link className="text-sm font-medium hover:underline underline-offset-4" href="/report">
+            Report a Violation
+          </Link>
+          <Link className="text-sm font-medium hover:underline underline-offset-4" href="/schedule">
+            Schedule a Test
+          </Link>
+          <Link className="text-sm font-medium hover:underline underline-offset-4" href="/waitlist">
+            Join Waitlist
+          </Link>
+          <Link className="text-sm font-medium hover:underline underline-offset-4" href="/integration-test">
+            Integration Test
+          </Link>
+          <Link className="text-sm font-medium hover:underline underline-offset-4" href="/test-forms">
+            Form Test Suite
+          </Link>
+        </nav>
       </header>
-
-      <main className="flex-1 container mx-auto px-4 py-12">
-        <section className="mb-12 text-center">
-          <h2 className="text-4xl font-bold mb-6">How It Works</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <Card>
-              <CardHeader>
-                <CardTitle>1. Identify a Violation</CardTitle>
-              </CardHeader>
-              <CardContent>
-                Learn about common illegal practices like undisclosed fees, bait-and-switch tactics, and more.
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader>
-                <CardTitle>2. Submit Your Report</CardTitle>
-              </CardHeader>
-              <CardContent>Use our guided form to quickly and accurately document your experience.</CardContent>
-            </Card>
-            <Card>
-              <CardHeader>
-                <CardTitle>3. We Take Action</CardTitle>
-              </CardHeader>
-              <CardContent>
-                Your report is processed and sent to the relevant NYC authorities for investigation.
-              </CardContent>
-            </Card>
-          </div>
-        </section>
-
-        <Separator className="my-12" />
-
-        <section className="mb-12 text-center">
-          <h2 className="text-4xl font-bold mb-6">Why Report?</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-            <div>
-              <p className="text-lg mb-4">
-                Illegal real estate practices harm countless New Yorkers. By reporting, you contribute to a fairer, more
-                transparent housing market for everyone. Your voice helps hold bad actors accountable.
-              </p>
-              <ul className="list-disc list-inside text-left text-lg space-y-2">
-                <li>Protect yourself and others from scams.</li>
-                <li>Help enforce NYC housing laws.</li>
-                <li>Contribute to a community database of violations.</li>
-                <li>Empower regulatory bodies with actionable data.</li>
-              </ul>
-            </div>
-            <div className="flex justify-center">
-              <Image
-                src="/placeholder.svg?height=400&width=600"
-                alt="NYC Skyline"
-                width={600}
-                height={400}
-                className="rounded-lg shadow-lg"
+      <main className="flex-1">
+        <section className="w-full py-12 md:py-24 lg:py-32 xl:py-48 bg-gradient-to-r from-gray-900 to-gray-800 text-white">
+          <div className="container px-4 md:px-6">
+            <div className="grid gap-6 lg:grid-cols-[1fr_400px] lg:gap-12 xl:grid-cols-[1fr_500px]">
+              <div className="flex flex-col justify-center space-y-4">
+                <div className="space-y-2">
+                  <h1 className="text-3xl font-bold tracking-tighter sm:text-5xl xl:text-6xl/none">
+                    Empowering Tenants: Report FARE Act Violations
+                  </h1>
+                  <p className="max-w-[600px] text-gray-300 md:text-xl">
+                    The NYC FARE Reporter helps you easily document and report violations of the NYC FARE Act, ensuring
+                    fairness in real estate.
+                  </p>
+                </div>
+                <div className="flex flex-col gap-2 min-[400px]:flex-row">
+                  <Link
+                    className="inline-flex h-10 items-center justify-center rounded-md bg-white px-8 text-sm font-medium text-gray-900 shadow transition-colors hover:bg-gray-200 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gray-950 disabled:pointer-events-none disabled:opacity-50"
+                    href="/report"
+                  >
+                    Report a Violation
+                  </Link>
+                  <Link
+                    className="inline-flex h-10 items-center justify-center rounded-md border border-gray-200 bg-transparent px-8 text-sm font-medium shadow-sm transition-colors hover:bg-gray-800 hover:text-white focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gray-950 disabled:pointer-events-none disabled:opacity-50"
+                    href="/schedule"
+                  >
+                    Schedule a Test
+                  </Link>
+                </div>
+              </div>
+              <img
+                alt="Hero"
+                className="mx-auto aspect-video overflow-hidden rounded-xl object-cover sm:w-full lg:order-last lg:aspect-square"
+                height="400"
+                src="/hero-image.png"
+                width="500"
               />
             </div>
           </div>
         </section>
-
-        <Separator className="my-12" />
-
-        <section className="mb-12 text-center">
-          <h2 className="text-4xl font-bold mb-6">Meet the Founder</h2>
-          <div className="flex flex-col md:flex-row items-center justify-center gap-8">
-            <Image
-              src="/madison-new-photo.jpeg"
-              alt="Madison"
-              width={200}
-              height={200}
-              className="rounded-full object-cover w-48 h-48 border-4 border-blue-600"
-            />
-            <div className="text-left max-w-2xl">
-              <h3 className="text-2xl font-semibold mb-2">Madison</h3>
-              <p className="text-lg mb-4">
-                Madison is a passionate advocate for tenant rights and transparency in the NYC real estate market. With
-                years of experience navigating the complexities of housing, she founded NYC FARE Reporter to provide a
-                much-needed platform for New Yorkers to fight back against predatory practices.
-              </p>
-              <p className="text-lg">
-                "My goal is to make the reporting process as simple and effective as possible, ensuring every New Yorker
-                has the tools to protect themselves and contribute to a more just housing system."
-              </p>
+        <section className="w-full py-12 md:py-24 lg:py-32 bg-gray-100">
+          <div className="container px-4 md:px-6">
+            <div className="flex flex-col items-center justify-center space-y-4 text-center">
+              <div className="space-y-2">
+                <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl">How It Works</h2>
+                <p className="max-w-[900px] text-gray-500 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
+                  Our platform simplifies the process of reporting FARE Act violations.
+                </p>
+              </div>
+            </div>
+            <div className="mx-auto grid max-w-5xl items-start gap-8 py-12 lg:grid-cols-3">
+              <Card>
+                <CardHeader>
+                  <CardTitle>1. Document</CardTitle>
+                </CardHeader>
+                <CardContent>Easily upload evidence, details, and your experience regarding the violation.</CardContent>
+              </Card>
+              <Card>
+                <CardHeader>
+                  <CardTitle>2. Submit</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  Our system compiles your information into a comprehensive report for submission.
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader>
+                  <CardTitle>3. Track</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  Receive updates on your report's status and next steps with relevant authorities.
+                </CardContent>
+              </Card>
             </div>
           </div>
         </section>
-
-        <Separator className="my-12" />
-
-        <section className="mb-12 text-center">
-          <h2 className="text-4xl font-bold mb-6">Connect with Us</h2>
-          <div className="flex flex-wrap justify-center gap-4">
-            <Button asChild variant="outline">
-              <Link href="https://instagram.com/thenycagent_" target="_blank" rel="noopener noreferrer">
-                Instagram: @thenycagent_
+        <section className="w-full py-12 md:py-24 lg:py-32">
+          <div className="container grid items-center gap-6 px-4 md:px-6 lg:grid-cols-2 lg:gap-10">
+            <div className="space-y-2">
+              <h2 className="text-3xl font-bold tracking-tighter md:text-4xl/enlarged">What is the FARE Act?</h2>
+              <p className="max-w-[600px] text-gray-500 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
+                The NYC FARE Act (Fair Access to Rental Equity Act) is a landmark legislation designed to protect
+                tenants from predatory practices in the rental market. It aims to increase transparency and fairness in
+                real estate transactions.
+              </p>
+              <Link
+                className="inline-flex h-10 items-center justify-center rounded-md bg-gray-900 px-8 text-sm font-medium text-gray-50 shadow transition-colors hover:bg-gray-900/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gray-950 disabled:pointer-events-none disabled:opacity-50"
+                href="https://www.nyc.gov/site/dca/about/fare-act.page"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Learn More <ArrowRightIcon className="ml-2 h-4 w-4" />
               </Link>
-            </Button>
-            <Button asChild variant="outline">
-              <Link href="https://tiktok.com/@thenycagent" target="_blank" rel="noopener noreferrer">
-                TikTok: @thenycagent
-              </Link>
-            </Button>
-            <Button asChild variant="outline">
-              <Link href="https://www.linkedin.com/in/thenycagent/" target="_blank" rel="noopener noreferrer">
-                LinkedIn: thenycagent
-              </Link>
-            </Button>
-            <Button asChild variant="outline">
-              <Link href="https://www.youtube.com/@thenycagent" target="_blank" rel="noopener noreferrer">
-                YouTube: @thenycagent
-              </Link>
-            </Button>
+            </div>
+            <img
+              alt="FARE Act"
+              className="mx-auto aspect-video overflow-hidden rounded-xl object-cover object-center sm:w-full lg:order-last"
+              height="310"
+              src="/placeholder.svg?height=310&width=550"
+              width="550"
+            />
           </div>
         </section>
-
-        <Separator className="my-12" />
-
-        <section className="text-center">
-          <h2 className="text-4xl font-bold mb-6">Support This Work</h2>
-          <p className="text-lg mb-8">
-            If you find this platform helpful and want to support our mission, consider buying us a coffee! Your
-            contribution helps us maintain and improve this service for all New Yorkers.
-          </p>
-          <Button asChild size="lg" className="bg-yellow-500 text-white hover:bg-yellow-600">
-            <Link href="https://buymeacoffee.com/thenycagent" target="_blank" rel="noopener noreferrer">
-              Buy Me a Coffee
-            </Link>
-          </Button>
+        <section className="w-full py-12 md:py-24 lg:py-32 bg-gray-100">
+          <div className="container px-4 md:px-6 text-center">
+            <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl mb-8">Support This Work</h2>
+            <div className="flex flex-wrap justify-center gap-6">
+              <Link
+                href="https://instagram.com/thenycagent_"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 text-gray-700 hover:text-gray-900 transition-colors"
+              >
+                <InstagramIcon className="h-6 w-6" />
+                <span>Instagram: @thenycagent_</span>
+                <ExternalLinkIcon className="h-4 w-4" />
+              </Link>
+              <Link
+                href="https://tiktok.com/@thenycagent"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 text-gray-700 hover:text-gray-900 transition-colors"
+              >
+                <TikTokIcon className="h-6 w-6" />
+                <span>TikTok: @thenycagent</span>
+                <ExternalLinkIcon className="h-4 w-4" />
+              </Link>
+              <Link
+                href="https://www.linkedin.com/in/thenycagent/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 text-gray-700 hover:text-gray-900 transition-colors"
+              >
+                <LinkedinIcon className="h-6 w-6" />
+                <span>LinkedIn: thenycagent</span>
+                <ExternalLinkIcon className="h-4 w-4" />
+              </Link>
+              <Link
+                href="https://www.youtube.com/@thenycagent"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 text-gray-700 hover:text-gray-900 transition-colors"
+              >
+                <YoutubeIcon className="h-6 w-6" />
+                <span>YouTube: @thenycagent</span>
+                <ExternalLinkIcon className="h-4 w-4" />
+              </Link>
+              <Link
+                href="https://buymeacoffee.com/thenycagent"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 text-gray-700 hover:text-gray-900 transition-colors"
+              >
+                <img src="/placeholder.svg?height=24&width=24" alt="Buy Me a Coffee" className="h-6 w-6" />
+                <span>Buy Me a Coffee</span>
+                <ExternalLinkIcon className="h-4 w-4" />
+              </Link>
+            </div>
+          </div>
         </section>
       </main>
-
-      <footer className="bg-gray-800 text-white py-8 px-4 text-center">
-        <div className="container mx-auto">
-          <p>&copy; {new Date().getFullYear()} NYC FARE Reporter. All rights reserved.</p>
-          <nav className="mt-4">
-            <ul className="flex justify-center space-x-6">
-              <li>
-                <Link href="/privacy" className="hover:underline">
-                  Privacy Policy
-                </Link>
-              </li>
-              <li>
-                <Link href="/terms" className="hover:underline">
-                  Terms of Service
-                </Link>
-              </li>
-              <li>
-                <Link href="/contact" className="hover:underline">
-                  Contact
-                </Link>
-              </li>
-            </ul>
-          </nav>
-        </div>
+      <footer className="flex flex-col gap-2 sm:flex-row py-6 w-full shrink-0 items-center px-4 md:px-6 border-t">
+        <p className="text-xs text-gray-500">&copy; 2024 NYC FARE Reporter. All rights reserved.</p>
+        <nav className="sm:ml-auto flex gap-4 sm:gap-6">
+          <Link className="text-xs hover:underline underline-offset-4" href="#">
+            Terms of Service
+          </Link>
+          <Link className="text-xs hover:underline underline-offset-4" href="#">
+            Privacy
+          </Link>
+          <Link
+            className="text-xs hover:underline underline-offset-4 flex items-center gap-1"
+            href="https://github.com/vercel/v0"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <GithubIcon className="h-3 w-3" />
+            GitHub
+          </Link>
+        </nav>
       </footer>
     </div>
   )
