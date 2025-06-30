@@ -1,155 +1,83 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { testDatabaseConnection } from "@/lib/actions"
-import { useActionState } from "react"
+import { AlertCircle, CheckCircle } from "lucide-react"
 
 export default function IntegrationTestPage() {
-  const [testResults, setTestResults] = useState<string[]>([])
+  const [testResult, setTestResult] = useState<{ success: boolean; message: string } | null>(null)
   const [isTesting, setIsTesting] = useState(false)
-  const [dbTestState, dbTestAction, isDbTestPending] = useActionState(testDatabaseConnection, null)
 
-  const runAllTests = async () => {
+  const handleTestConnection = async () => {
     setIsTesting(true)
-    setTestResults([]) // Clear previous results
-
-    const results: string[] = []
-
-    // Test 1: Database Connection
-    results.push("Running Database Connection Test...")
-    setTestResults([...results])
-    const dbResult = await testDatabaseConnection()
-    results.push(`Database Connection Test: ${dbResult.message}`)
-    setTestResults([...results])
-
-    // Simulate other tests
-    results.push("Running API Endpoint Test (simulated)...")
-    setTestResults([...results])
-    await new Promise((resolve) => setTimeout(resolve, 1000)) // Simulate API call
-    results.push("API Endpoint Test: Success!")
-    setTestResults([...results])
-
-    results.push("Running UI Component Render Test (simulated)...")
-    setTestResults([...results])
-    await new Promise((resolve) => setTimeout(resolve, 500)) // Simulate UI render
-    results.push("UI Component Render Test: Success!")
-    setTestResults([...results])
-
+    const result = await testDatabaseConnection()
+    setTestResult(result)
     setIsTesting(false)
   }
 
-  useEffect(() => {
-    if (dbTestState) {
-      setTestResults((prev) => [...prev, `Database Connection Button Test: ${dbTestState.message}`])
-    }
-  }, [dbTestState])
-
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-3xl font-bold mb-6">Integration Test Suite</h1>
+      <h1 className="text-3xl font-bold mb-6">Integration Test Page</h1>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-6 md:grid-cols-2">
         {/* Database Setup Instructions Card */}
-        <Card className="col-span-full">
+        <Card>
           <CardHeader>
             <CardTitle>Database Setup Instructions</CardTitle>
             <CardDescription>
-              Follow these steps to ensure your Supabase database is correctly set up for this project.
+              Follow these steps to ensure your Supabase database is correctly set up for this application.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div>
-              <h3 className="font-semibold text-lg mb-2">1. Environment Variables</h3>
-              <p className="text-sm text-gray-600">
-                Ensure your <code>.env.local</code> file (or Vercel environment variables) contains:
-              </p>
-              <ul className="list-disc list-inside text-sm text-gray-700 ml-4">
-                <li>
-                  <code>NEXT_PUBLIC_SUPABASE_URL</code>
-                </li>
-                <li>
-                  <code>NEXT_PUBLIC_SUPABASE_ANON_KEY</code>
-                </li>
-                <li>
-                  <code>SUPABASE_SERVICE_ROLE_KEY</code> (for server-side actions)
-                </li>
-              </ul>
-              <p className="text-sm text-gray-600 mt-2">
-                These can be found in your Supabase project settings under "API".
-              </p>
-            </div>
-            <div>
-              <h3 className="font-semibold text-lg mb-2">2. Run SQL Scripts</h3>
-              <p className="text-sm text-gray-600">
-                Execute the following SQL scripts in your Supabase SQL Editor to create and update necessary tables:
-              </p>
-              <ul className="list-disc list-inside text-sm text-gray-700 ml-4">
-                <li>
-                  <code>scripts/create-tables.sql</code> (if starting fresh)
-                </li>
-                <li>
-                  <code>scripts/update-schema.sql</code> (for general updates)
-                </li>
-                <li>
-                  <code>scripts/add-report-fields.sql</code> (for specific report fields)
-                </li>
-                <li>
-                  <code>scripts/update-reports-schema-v2.sql</code> (for latest schema)
-                </li>
-                <li>
-                  <code>scripts/fix-reports-schema-complete.sql</code> (for any previous fixes)
-                </li>
-              </ul>
-              <p className="text-sm text-gray-600 mt-2">
-                You can find these files in the <code>scripts/</code> directory of your project.
-              </p>
-            </div>
-            <div>
-              <h3 className="font-semibold text-lg mb-2">3. Enable Storage Bucket</h3>
-              <p className="text-sm text-gray-600">
-                If using file uploads, ensure you have a Supabase Storage bucket named <code>report_documents</code>.
-                You can create and configure it in the Supabase Dashboard under "Storage".
-              </p>
-            </div>
+            <ol className="list-decimal list-inside space-y-2 text-sm text-gray-700">
+              <li>
+                <strong>Create Tables:</strong> Open your Supabase project, navigate to the SQL Editor, and run the
+                script located at `scripts/create-tables.sql`. This will set up the initial `reports`,
+                `waitlist_entries`, and `scheduled_reports` tables.
+              </li>
+              <li>
+                <strong>Update Schema:</strong> After creating tables, run the script at `scripts/update-schema.sql` to
+                apply any necessary schema updates or migrations.
+              </li>
+              <li>
+                <strong>Verify Environment Variables:</strong> Ensure your `.env.local` file (or Vercel environment
+                variables) contains `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` with your Supabase
+                project credentials.
+              </li>
+              <li>
+                <strong>Test Connection:</strong> Use the "Test Database Connection" button on this page to verify that
+                your application can connect to Supabase.
+              </li>
+            </ol>
+            <p className="text-xs text-gray-500 mt-4">
+              Note: If you encounter issues, double-check your Supabase project settings, API keys, and ensure your
+              database is publicly accessible or your network settings are configured correctly.
+            </p>
           </CardContent>
         </Card>
 
-        {/* Test Controls Card */}
+        {/* Database Connection Test Card */}
         <Card>
           <CardHeader>
-            <CardTitle>Test Controls</CardTitle>
-            <CardDescription>Run various tests to verify application functionality.</CardDescription>
+            <CardTitle>Test Supabase Connection</CardTitle>
+            <CardDescription>Click the button below to test the connection to your Supabase database.</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <Button onClick={runAllTests} disabled={isTesting} className="w-full">
-              {isTesting ? "Running Tests..." : "Run All Tests"}
+          <CardContent className="flex flex-col gap-4">
+            <Button onClick={handleTestConnection} disabled={isTesting}>
+              {isTesting ? "Testing..." : "Test Database Connection"}
             </Button>
-            <Button onClick={() => dbTestAction(new FormData())} disabled={isDbTestPending} className="w-full">
-              {isDbTestPending ? "Testing DB Connection..." : "Test Database Connection"}
-            </Button>
-          </CardContent>
-        </Card>
-
-        {/* Test Results Card */}
-        <Card className="md:col-span-2">
-          <CardHeader>
-            <CardTitle>Test Results</CardTitle>
-            <CardDescription>Output from the executed tests.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="bg-gray-100 p-4 rounded-md h-64 overflow-auto text-sm font-mono">
-              {testResults.length === 0 ? (
-                <p className="text-gray-500">No tests run yet.</p>
-              ) : (
-                testResults.map((result, index) => (
-                  <p key={index} className={result.includes("failed") ? "text-red-600" : "text-green-700"}>
-                    {result}
-                  </p>
-                ))
-              )}
-            </div>
+            {testResult && (
+              <div
+                className={`flex items-center gap-2 p-3 rounded-md ${
+                  testResult.success ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
+                }`}
+              >
+                {testResult.success ? <CheckCircle className="h-5 w-5" /> : <AlertCircle className="h-5 w-5" />}
+                <p className="text-sm">{testResult.message}</p>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>

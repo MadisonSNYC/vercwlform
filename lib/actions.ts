@@ -3,42 +3,38 @@
 import { createClient } from "@/lib/supabase/server"
 import { revalidatePath } from "next/cache"
 
-export async function submitFareReport(formData: FormData) {
+export async function submitFareReport(prevState: any, formData: FormData) {
   const supabase = createClient()
 
   const formType = formData.get("formType") as string
   const email = formData.get("email") as string
+  const firstName = formData.get("firstName") as string
+  const lastName = formData.get("lastName") as string
+  const phone = formData.get("phone") as string
+  const mailingListConsent = formData.get("mailingListConsent") === "on"
 
   if (formType === "waitlist") {
-    const firstName = formData.get("firstName") as string
-    const lastName = formData.get("lastName") as string
-    const phone = formData.get("phone") as string
-    const mailingListConsent = formData.get("mailingListConsent") === "on"
-
-    const { data, error } = await supabase.from("waitlist_entries").insert([
-      {
-        email,
-        first_name: firstName,
-        last_name: lastName,
-        phone,
-        mailing_list_consent: mailingListConsent,
-      },
-    ])
+    const { data, error } = await supabase
+      .from("waitlist_entries")
+      .insert([
+        {
+          email,
+          first_name: firstName,
+          last_name: lastName,
+          phone,
+          mailing_list_consent: mailingListConsent,
+        },
+      ])
+      .select()
 
     if (error) {
       console.error("Error inserting waitlist entry:", error)
-      return { success: false, error: error.message }
+      return { error: "Failed to join waitlist. Please try again." }
     }
 
     revalidatePath("/")
-    return { success: true, message: "Successfully joined the waitlist!" }
+    return { success: "Successfully joined the waitlist! We will keep you updated." }
   } else if (formType === "report") {
-    const firstName = formData.get("firstName") as string
-    const lastName = formData.get("lastName") as string
-    const phone = formData.get("phone") as string
-    const preferredContact = formData.get("preferredContact") as string
-    const isVeteran = formData.get("isVeteran") === "on"
-
     const hasStreetEasyListing = formData.get("hasStreetEasyListing") === "on"
     const streetEasyLink = formData.get("streetEasyLink") as string
     const manualAddress = formData.get("manualAddress") as string
@@ -49,17 +45,22 @@ export async function submitFareReport(formData: FormData) {
     const borough = formData.get("borough") as string
     const neighborhood = formData.get("neighborhood") as string
 
+    const whoReporting = formData.get("whoReporting") as string
+    const managementCompanyName = formData.get("landlordCompany") as string
+    const agentFirstName = formData.get("brokerName")?.split(" ")[0] as string
+    const agentLastName = formData.get("brokerName")?.split(" ")[1] as string
+    const brokerageName = formData.get("brokerageName") as string
+    const brokerageForAgent = formData.get("brokerCompany") as string
+    const businessAddress = formData.get("businessAddress") as string
+    const businessPhone = formData.get("businessPhone") as string
+    const businessEmail = formData.get("businessEmail") as string
+    const businessWebsite = formData.get("businessWebsite") as string
+    const businessLicense = formData.get("businessLicense") as string
+
     const contactedBusiness = formData.get("contactedBusiness") === "on"
     const employeeName = formData.get("employeeName") as string
     const whatHappened = formData.get("whatHappened") as string
     const outcome = formData.get("outcome") as string
-
-    const whoReporting = formData.get("whoReporting") as string
-    const managementCompanyName = formData.get("landlordCompany") as string
-    const agentName = formData.get("brokerName") as string
-    const brokerageName = formData.get("brokerageName") as string
-    const brokerageForAgent = formData.get("brokerCompany") as string
-    const businessAddress = formData.get("businessAddress") as string
 
     const violations: string[] = []
     for (const [key, value] of formData.entries()) {
@@ -74,18 +75,6 @@ export async function submitFareReport(formData: FormData) {
       }
     }
 
-    const narrative = formData.get("narrative") as string
-    const additionalContext = formData.get("additionalContext") as string
-    const desiredOutcome: string[] = formData.getAll("desiredOutcome") as string[]
-    const desiredOutcomeOther = formData.get("desiredOutcomeOther") as string
-    const referralSource = formData.get("referralSource") as string
-    const referralSourceOther = formData.get("referralSourceOther") as string
-
-    const dcwpConsent = formData.get("dcwpConsent") === "on"
-    const proxyConsent = formData.get("proxyConsent") === "on"
-    const mailingListConsent = formData.get("mailingListConsent") === "on"
-
-    // DCWP Fee Details
     const illegalBrokerFeeCharged = formData.get("illegalBrokerFeeCharged") === "on"
     const requirementToUseBroker = formData.get("requirementToUseBroker") === "on"
     const feesNotDisclosed = formData.get("feesNotDisclosed") === "on"
@@ -93,129 +82,131 @@ export async function submitFareReport(formData: FormData) {
     const improperFeesInAd = formData.get("improperFeesInAd") === "on"
     const improperFeesInAdUrl = formData.get("improperFeesInAdUrl") as string
 
-    // Fee charges
     const feeCharges: string[] = formData.getAll("feeCharge") as string[]
     const feeChargesOther = formData.get("feeChargesOther") as string
+
+    const narrative = formData.get("narrative") as string
+    const additionalNotes = formData.get("additionalContext") as string
+    const desiredOutcome = formData.getAll("desiredOutcome") as string[]
+    const desiredOutcomeOther = formData.get("desiredOutcomeOther") as string
+    const referralSource = formData.get("referralSource") as string
+    const referralSourceOther = formData.get("referralSourceOther") as string
 
     const aiRefinementOption = formData.get("aiRefinementOption") as string
     const reportDescription = formData.get("reportDescription") as string
 
-    const documents = formData.getAll("documents") as File[]
-    const documentUrls: string[] = []
+    const userEmail = formData.get("email") as string
+    const userPhone = formData.get("phone") as string
+    const preferredContact = formData.get("preferredContact") as string
+    const isVeteran = formData.get("isVeteran") === "on"
 
-    // Handle file uploads
-    if (documents && documents.length > 0) {
-      for (const file of documents) {
-        if (file.size > 0) {
-          const filePath = `public/${Date.now()}-${file.name}`
-          const { data: uploadData, error: uploadError } = await supabase.storage
-            .from("report_documents")
-            .upload(filePath, file)
+    const resendReportToMe = formData.get("resendReportToMe") === "on"
+    const dcwpConsent = formData.get("dcwpConsent") === "on"
+    const proxyConsent = formData.get("proxyConsent") === "on"
 
-          if (uploadError) {
-            console.error("Error uploading document:", uploadError)
-            return { success: false, error: `Failed to upload document: ${uploadError.message}` }
-          }
-          documentUrls.push(uploadData.path)
-        }
-      }
-    }
-
-    const { data, error } = await supabase.from("reports").insert([
-      {
-        first_name: firstName,
-        last_name: lastName,
-        email,
-        phone,
-        preferred_contact: preferredContact,
-        is_veteran: isVeteran,
-        has_streeteasy_listing: hasStreetEasyListing,
-        streeteasy_link: streetEasyLink,
-        manual_address: manualAddress,
-        manual_price: manualPrice,
-        manual_unit: manualUnit,
-        manual_bedrooms: manualBedrooms,
-        manual_bathrooms: manualBathrooms,
-        borough: borough,
-        neighborhood: neighborhood,
-        who_reporting: whoReporting,
-        management_company_name: managementCompanyName,
-        agent_name: agentName,
-        brokerage_name: brokerageName,
-        brokerage_for_agent: brokerageForAgent,
-        business_address: businessAddress,
-        contacted_business: contactedBusiness,
-        employee_name: employeeName,
-        what_happened: whatHappened,
-        outcome: outcome,
-        violations: violations,
-        violation_other_texts: violationOtherTexts,
-        narrative: narrative,
-        additional_context: additionalContext,
-        desired_outcome: desiredOutcome,
-        desired_outcome_other: desiredOutcomeOther,
-        referral_source: referralSource,
-        referral_source_other: referralSourceOther,
-        dcwp_consent: dcwpConsent,
-        proxy_consent: proxyConsent,
-        mailing_list_consent: mailingListConsent,
-        illegal_broker_fee_charged: illegalBrokerFeeCharged,
-        requirement_to_use_broker: requirementToUseBroker,
-        fees_not_disclosed: feesNotDisclosed,
-        fees_not_disclosed_text: feesNotDisclosedText,
-        improper_fees_in_ad: improperFeesInAd,
-        improper_fees_in_ad_url: improperFeesInAdUrl,
-        fee_charges: feeCharges,
-        fee_charges_other: feeChargesOther,
-        ai_refinement_option: aiRefinementOption,
-        report_description: reportDescription,
-        document_urls: documentUrls,
-      },
-    ])
+    const { data, error } = await supabase
+      .from("reports")
+      .insert([
+        {
+          first_name: firstName,
+          last_name: lastName,
+          email: userEmail,
+          phone: userPhone,
+          preferred_contact: preferredContact,
+          is_veteran: isVeteran,
+          referral_source: referralSource,
+          referral_source_other: referralSourceOther,
+          mailing_list_consent: mailingListConsent,
+          property_info_type: hasStreetEasyListing ? "streeteasy" : "manual",
+          streeteasy_link: streetEasyLink,
+          manual_address: manualAddress,
+          manual_price: manualPrice,
+          manual_unit: manualUnit,
+          manual_bedrooms: manualBedrooms,
+          manual_bathrooms: manualBathrooms,
+          borough: borough,
+          neighborhood: neighborhood,
+          who_reporting: whoReporting,
+          management_company_name: managementCompanyName,
+          agent_first_name: agentFirstName,
+          agent_last_name: agentLastName,
+          brokerage_name: brokerageName,
+          brokerage_for_agent: brokerageForAgent,
+          business_address: businessAddress,
+          business_phone: businessPhone,
+          business_email: businessEmail,
+          business_website: businessWebsite,
+          business_license: businessLicense,
+          contacted_business: contactedBusiness,
+          employee_name: employeeName,
+          what_happened: whatHappened,
+          outcome: outcome,
+          outcome_chips: outcome.split(",").map((s) => s.trim()), // Assuming outcome is comma-separated string
+          outcome_other_text: formData.get("outcomeOtherText") as string,
+          violations: violations,
+          violation_other_texts: violationOtherTexts,
+          illegal_broker_fee_charged: illegalBrokerFeeCharged,
+          requirement_to_use_broker: requirementToUseBroker,
+          fees_not_disclosed: feesNotDisclosed,
+          fees_not_disclosed_text: feesNotDisclosedText,
+          improper_fees_in_ad: improperFeesInAd,
+          improper_fees_in_ad_url: improperFeesInAdUrl,
+          fee_charges: feeCharges,
+          fee_charges_other: feeChargesOther,
+          ai_refinement_option: aiRefinementOption,
+          report_description: reportDescription,
+          narrative: narrative,
+          additional_notes: additionalNotes,
+          desired_outcome: desiredOutcome,
+          desired_outcome_other: desiredOutcomeOther,
+          resend_report_to_me: resendReportToMe,
+          dcwp_consent: dcwpConsent,
+          proxy_consent: proxyConsent,
+        },
+      ])
+      .select()
 
     if (error) {
       console.error("Error inserting report:", error)
-      return { success: false, error: error.message }
+      return { error: "Failed to submit report. Please try again." }
     }
 
     revalidatePath("/")
-    return { success: true, message: "Report submitted successfully! Thank you for your contribution." }
+    return { success: "Your report has been submitted successfully! Thank you for your contribution." }
   } else if (formType === "schedule") {
-    const firstName = formData.get("firstName") as string
-    const lastName = formData.get("lastName") as string
-    const phone = formData.get("phone") as string
     const contactTime = formData.get("contactTime") as string
     const issueSnapshot = formData.get("issueSnapshot") as string
-    const mailingListConsent = formData.get("mailingListConsent") === "on"
 
-    const { data, error } = await supabase.from("scheduled_reports").insert([
-      {
-        email,
-        first_name: firstName,
-        last_name: lastName,
-        phone,
-        best_time_to_reach_you: contactTime,
-        brief_issue_snapshot: issueSnapshot,
-        mailing_list_consent: mailingListConsent,
-      },
-    ])
+    const { data, error } = await supabase
+      .from("scheduled_reports")
+      .insert([
+        {
+          email,
+          first_name: firstName,
+          last_name: lastName,
+          phone,
+          mailing_list_consent: mailingListConsent,
+          best_time_to_reach_you: contactTime,
+          brief_issue_snapshot: issueSnapshot,
+        },
+      ])
+      .select()
 
     if (error) {
       console.error("Error inserting scheduled report:", error)
-      return { success: false, error: error.message }
+      return { error: "Failed to schedule report. Please try again." }
     }
 
     revalidatePath("/")
-    return { success: true, message: "Report scheduling request submitted successfully! We will contact you soon." }
+    return { success: "Your report scheduling request has been received. We will contact you shortly!" }
   }
 
-  return { success: false, error: "Invalid form type." }
+  return { error: "Invalid form type." }
 }
 
 export async function testDatabaseConnection() {
   const supabase = createClient()
   try {
-    // Attempt a simple query to check connection
     const { data, error } = await supabase.from("reports").select("id").limit(1)
 
     if (error) {

@@ -1,26 +1,23 @@
 import { createBrowserClient } from "@supabase/ssr"
 
-// Check if Supabase environment variables are available
-export const isSupabaseConfigured =
-  typeof process.env.NEXT_PUBLIC_SUPABASE_URL === "string" &&
-  process.env.NEXT_PUBLIC_SUPABASE_URL.length > 0 &&
-  typeof process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY === "string" &&
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY.length > 0
-
 // Create a singleton instance of the Supabase client for Client Components
 let supabaseInstance: ReturnType<typeof createBrowserClient> | null = null
 
 export const supabase = (() => {
-  if (!isSupabaseConfigured) {
-    console.warn("Supabase environment variables are not configured")
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+  if (!supabaseUrl || !supabaseAnonKey) {
+    console.error(
+      "Supabase environment variables NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY are required.",
+    )
+    // In a real application, you might want to throw an error or handle this more gracefully
+    // For now, we'll return null and let the consuming code handle it.
     return null
   }
 
   if (!supabaseInstance) {
-    supabaseInstance = createBrowserClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    )
+    supabaseInstance = createBrowserClient(supabaseUrl, supabaseAnonKey)
   }
 
   return supabaseInstance
