@@ -7,6 +7,12 @@ import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { CheckCircle, XCircle, Clock, Play, AlertTriangle, Database, RefreshCw } from "lucide-react"
 import { submitFareReport } from "@/lib/actions"
+import { LeadAnalytics } from "@/components/lead-analytics" // Adjust path as necessary
+import { LeadProgressIndicator } from "@/components/lead-progress-indicator" // Adjust path as necessary
+import "@testing-library/jest-dom"
+import { setupServer } from "msw/node"
+import { rest } from "msw"
+import { beforeAll, afterEach, afterAll } from "@jest/globals"
 
 interface TestResult {
   name: string
@@ -16,6 +22,32 @@ interface TestResult {
   data?: any
   error?: any
 }
+
+const mockLeadData = {
+  totalLeads: 1234,
+  leadsByFormType: [
+    { name: "Waitlist", value: 500 },
+    { name: "Schedule", value: 400 },
+    { name: "Report", value: 334 },
+  ],
+  leadsOverTime: [
+    { date: "Jan", count: 100 },
+    { date: "Feb", count: 120 },
+    { date: "Mar", count: 150 },
+    { date: "Apr", count: 130 },
+    { date: "May", count: 180 },
+  ],
+}
+
+const server = setupServer(
+  rest.get("/api/leads-data", (req, res, ctx) => {
+    return res(ctx.json(mockLeadData))
+  }),
+)
+
+beforeAll(() => server.listen())
+afterEach(() => server.resetHandlers())
+afterAll(() => server.close())
 
 export default function IntegrationTest() {
   const [tests, setTests] = useState<TestResult[]>([
@@ -389,6 +421,32 @@ export default function IntegrationTest() {
                 Copy the contents of <code>scripts/create-tables.sql</code> and run it in your Supabase dashboard.
               </p>
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Lead Analytics Component */}
+        <Card className="border-green-200 bg-green-50">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-green-900">
+              <Database className="h-5 w-5" />
+              Lead Analytics
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="text-green-800">
+            <LeadAnalytics data={mockLeadData} />
+          </CardContent>
+        </Card>
+
+        {/* Lead Progress Indicator Component */}
+        <Card className="border-blue-200 bg-blue-50">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-blue-900">
+              <Database className="h-5 w-5" />
+              Lead Progress Indicator
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="text-blue-800">
+            <LeadProgressIndicator currentStep={1} totalSteps={5} />
           </CardContent>
         </Card>
       </div>

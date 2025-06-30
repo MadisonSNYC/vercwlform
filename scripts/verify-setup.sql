@@ -1,39 +1,65 @@
--- Verify that all tables exist and have the correct structure
-SELECT 
-  table_name,
-  column_name,
-  data_type,
-  is_nullable
-FROM information_schema.columns 
-WHERE table_schema = 'public' 
-  AND table_name IN ('waitlist', 'reports')
-ORDER BY table_name, ordinal_position;
+-- Verify if the 'leads' table exists
+SELECT EXISTS (
+   SELECT 1
+   FROM   information_schema.tables
+   WHERE  table_schema = 'public'
+   AND    table_name = 'leads'
+);
 
--- Check if RLS is enabled
-SELECT 
-  schemaname,
-  tablename,
-  rowsecurity
-FROM pg_tables 
-WHERE schemaname = 'public' 
-  AND tablename IN ('waitlist', 'reports');
+-- Verify if the 'reports' table exists
+SELECT EXISTS (
+   SELECT 1
+   FROM   information_schema.tables
+   WHERE  table_schema = 'public'
+   AND    table_name = 'reports'
+);
 
--- Check policies
-SELECT 
-  schemaname,
-  tablename,
-  policyname,
-  permissive,
-  roles,
-  cmd,
-  qual
-FROM pg_policies 
-WHERE schemaname = 'public' 
-  AND tablename IN ('waitlist', 'reports');
+-- Verify RLS is enabled for 'leads'
+SELECT relrowsecurity FROM pg_class WHERE relname = 'leads';
 
--- Test insert permissions (this should work)
-INSERT INTO waitlist (email, form_type, mailing_list_consent) 
-VALUES ('test@example.com', 'waitlist', false);
+-- Verify RLS is enabled for 'reports'
+SELECT relrowsecurity FROM pg_class WHERE relname = 'reports';
 
--- Clean up test data
-DELETE FROM waitlist WHERE email = 'test@example.com';
+-- Verify policies for 'leads'
+SELECT policyname, permissive, roles, cmd
+FROM pg_policies
+WHERE schemaname = 'public' AND tablename = 'leads';
+
+-- Verify policies for 'reports'
+SELECT policyname, permissive, roles, cmd
+FROM pg_policies
+WHERE schemaname = 'public' AND tablename = 'reports';
+
+-- Check for 'additional_context' column in 'reports'
+SELECT column_name, data_type
+FROM information_schema.columns
+WHERE table_schema = 'public'
+  AND table_name = 'reports'
+  AND column_name = 'additional_context';
+
+-- Check for 'has_streeteasy_listing' column in 'reports'
+SELECT column_name, data_type
+FROM information_schema.columns
+WHERE table_schema = 'public'
+  AND table_name = 'reports'
+  AND column_name = 'has_streeteasy_listing';
+
+-- Check for 'streeteasy_link' column in 'reports'
+SELECT column_name, data_type
+FROM information_schema.columns
+WHERE table_schema = 'public'
+  AND table_name = 'reports'
+  AND column_name = 'streeteasy_link';
+
+-- Check for 'form_type' column in 'leads'
+SELECT column_name, data_type
+FROM information_schema.columns
+WHERE table_schema = 'public'
+  AND table_name = 'leads'
+  AND column_name = 'form_type';
+
+-- Check for 'leads_form_type_check' constraint
+SELECT conname
+FROM pg_constraint
+WHERE conrelid = 'public.leads'::regclass
+  AND conname = 'leads_form_type_check';

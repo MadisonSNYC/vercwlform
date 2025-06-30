@@ -1,142 +1,72 @@
-export interface AccessibilityIssue {
-  type: "error" | "warning" | "info"
-  element: string
-  message: string
-  suggestion: string
-}
+// components/test-utils/accessibility-checker.ts
 
-export class AccessibilityChecker {
-  static checkForm(formElement: HTMLElement): AccessibilityIssue[] {
-    const issues: AccessibilityIssue[] = []
+/**
+ * Checks for common accessibility issues in a given DOM element.
+ * This is a simplified example and not a comprehensive accessibility audit tool.
+ * For full accessibility testing, consider tools like axe-core.
+ * @param element The DOM element to check for accessibility.
+ * @returns An array of strings, each describing an accessibility issue found.
+ */
+export function checkAccessibility(element: HTMLElement): string[] {
+  const issues: string[] = []
 
-    // Check for labels
-    const inputs = formElement.querySelectorAll("input, textarea, select")
-    inputs.forEach((input, index) => {
-      const id = input.getAttribute("id")
-      const ariaLabel = input.getAttribute("aria-label")
-      const ariaLabelledBy = input.getAttribute("aria-labelledby")
-
-      if (id) {
-        const label = formElement.querySelector(`label[for="${id}"]`)
-        if (!label && !ariaLabel && !ariaLabelledBy) {
-          issues.push({
-            type: "error",
-            element: `Input ${index + 1}`,
-            message: "Input has no associated label",
-            suggestion: "Add a label element with for attribute or aria-label",
-          })
-        }
-      } else if (!ariaLabel && !ariaLabelledBy) {
-        issues.push({
-          type: "error",
-          element: `Input ${index + 1}`,
-          message: "Input has no id and no aria-label",
-          suggestion: "Add an id attribute and corresponding label, or use aria-label",
-        })
-      }
-    })
-
-    // Check for required field indicators
-    const requiredInputs = formElement.querySelectorAll("input[required], textarea[required], select[required]")
-    requiredInputs.forEach((input, index) => {
-      const ariaRequired = input.getAttribute("aria-required")
-      if (ariaRequired !== "true") {
-        issues.push({
-          type: "warning",
-          element: `Required input ${index + 1}`,
-          message: "Required field missing aria-required attribute",
-          suggestion: 'Add aria-required="true" to required fields',
-        })
-      }
-    })
-
-    // Check for error message associations
-    const errorMessages = formElement.querySelectorAll('[class*="error"], [role="alert"]')
-    if (errorMessages.length > 0) {
-      errorMessages.forEach((error, index) => {
-        const describedBy = formElement.querySelector(`[aria-describedby="${error.id}"]`)
-        if (!describedBy && error.id) {
-          issues.push({
-            type: "warning",
-            element: `Error message ${index + 1}`,
-            message: "Error message not associated with input",
-            suggestion: "Use aria-describedby to associate error messages with inputs",
-          })
-        }
-      })
+  // Check for missing alt text on images
+  element.querySelectorAll("img").forEach((img) => {
+    if (!img.alt || img.alt.trim() === "") {
+      issues.push(`Image missing alt text: ${img.outerHTML.substring(0, 50)}...`)
     }
+  })
 
-    // Check for form submission feedback
-    const submitButton = formElement.querySelector('button[type="submit"], input[type="submit"]')
-    if (submitButton) {
-      const ariaLive = formElement.querySelector("[aria-live]")
-      if (!ariaLive) {
-        issues.push({
-          type: "info",
-          element: "Form",
-          message: "No aria-live region for form feedback",
-          suggestion: "Add aria-live region to announce form submission status",
-        })
+  // Check for missing labels on input fields
+  element
+    .querySelectorAll(
+      'input:not([type="hidden"]):not([type="submit"]):not([type="button"]):not([type="image"]):not([type="reset"]), textarea, select',
+    )
+    .forEach((input) => {
+      const id = input.id
+      const hasLabel = id && element.querySelector(`label[for="${id}"]`)
+      const hasAriaLabel = input.hasAttribute("aria-label") || input.hasAttribute("aria-labelledby")
+
+      if (!hasLabel && !hasAriaLabel) {
+        issues.push(`Input field missing a label or aria-label: ${input.outerHTML.substring(0, 50)}...`)
+      }
+    })
+
+  // Check for insufficient contrast (very basic, ideally needs color analysis)
+  // This is a conceptual check. Real contrast checking requires rendering and color parsing.
+  // For demonstration, we'll just flag elements that might be problematic.
+  element.querySelectorAll("button, a").forEach((interactiveElement) => {
+    const style = window.getComputedStyle(interactiveElement)
+    const backgroundColor = style.backgroundColor
+    const color = style.color
+
+    // This is a very naive check. A real check would parse RGB/HEX and calculate contrast ratio.
+    // For example, if background is very light and text is also very light.
+    if (
+      backgroundColor &&
+      color &&
+      (backgroundColor.includes("255, 255, 255") || backgroundColor.includes("rgb(255, 255, 255)")) &&
+      (color.includes("200, 200, 200") || color.includes("rgb(200, 200, 200)"))
+    ) {
+      issues.push(`Potential low contrast for interactive element: ${interactiveElement.outerHTML.substring(0, 50)}...`)
+    }
+  })
+
+  // Check for non-semantic buttons (divs or spans used as buttons)
+  element.querySelectorAll("div, span").forEach((el) => {
+    if (el.hasAttribute("onclick") || (el.hasAttribute("role") && el.getAttribute("role") === "button")) {
+      if (el.tagName !== "BUTTON") {
+        issues.push(
+          `Non-semantic element used as a button. Consider using <button>: ${el.outerHTML.substring(0, 50)}...`,
+        )
       }
     }
+  })
 
-    // Check color contrast (simplified check)
-    const colorElements = formElement.querySelectorAll("button, .error, .success")
-    colorElements.forEach((element, index) => {
-      const styles = window.getComputedStyle(element)
-      const backgroundColor = styles.backgroundColor
-      const color = styles.color
-
-      // This is a simplified check - in practice, you'd use a proper contrast ratio calculator
-      if (backgroundColor === "rgb(255, 255, 255)" && color === "rgb(255, 255, 255)") {
-        issues.push({
-          type: "error",
-          element: `Element ${index + 1}`,
-          message: "Insufficient color contrast",
-          suggestion: "Ensure color contrast ratio meets WCAG guidelines (4.5:1 for normal text)",
-        })
-      }
-    })
-
-    return issues
+  // Check for missing lang attribute on html (should be on the root html element)
+  if (!document.documentElement.hasAttribute("lang")) {
+    issues.push("Missing `lang` attribute on the <html> element.")
   }
 
-  static generateReport(issues: AccessibilityIssue[]): string {
-    if (issues.length === 0) {
-      return "No accessibility issues found!"
-    }
-
-    const errors = issues.filter((i) => i.type === "error")
-    const warnings = issues.filter((i) => i.type === "warning")
-    const info = issues.filter((i) => i.type === "info")
-
-    let report = `Accessibility Report:\n\n`
-    report += `Summary: ${errors.length} errors, ${warnings.length} warnings, ${info.length} info\n\n`
-
-    if (errors.length > 0) {
-      report += `ERRORS:\n`
-      errors.forEach((issue, index) => {
-        report += `${index + 1}. ${issue.element}: ${issue.message}\n`
-        report += `   Suggestion: ${issue.suggestion}\n\n`
-      })
-    }
-
-    if (warnings.length > 0) {
-      report += `WARNINGS:\n`
-      warnings.forEach((issue, index) => {
-        report += `${index + 1}. ${issue.element}: ${issue.message}\n`
-        report += `   Suggestion: ${issue.suggestion}\n\n`
-      })
-    }
-
-    if (info.length > 0) {
-      report += `INFO:\n`
-      info.forEach((issue, index) => {
-        report += `${index + 1}. ${issue.element}: ${issue.message}\n`
-        report += `   Suggestion: ${issue.suggestion}\n\n`
-      })
-    }
-
-    return report
-  }
+  return issues
 }

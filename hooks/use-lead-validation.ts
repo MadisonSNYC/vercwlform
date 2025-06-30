@@ -1,133 +1,111 @@
 "use client"
 
-import { useState, useCallback } from "react"
+import type React from "react"
 
-interface LeadData {
-  firstName: string
-  lastName: string
-  email: string
-  phone?: string // Made phone optional
-  selectedForm: string
+import { useState, useEffect, useCallback } from "react"
+import { validateField } from "@/components/test-utils/form-validator"
+
+interface ValidationRules {
+  [key: string]: {
+    required?: boolean
+    minLength?: number
+    maxLength?: number
+    pattern?: string
+    patternMessage?: string
+    email?: boolean
+    min?: number
+    max?: number
+    checked?: boolean
+  }
 }
 
-interface ValidationErrors {
-  firstName?: string
-  lastName?: string
-  email?: string
-  selectedForm?: string
-  general?: string
+interface FormErrors {
+  [key: string]: string | null
 }
 
-export function useLeadValidation() {
-  const [errors, setErrors] = useState<ValidationErrors>({})
-
-  const validateField = useCallback(
-    (field: keyof LeadData, value: string) => {
-      const newErrors = { ...errors }
-
-      switch (field) {
-        case "firstName":
-          if (!(value ?? "").trim()) {
-            // Added nullish coalescing
-            newErrors.firstName = "First name is required"
-          } else if ((value ?? "").trim().length < 2) {
-            newErrors.firstName = "First name must be at least 2 characters"
-          } else {
-            delete newErrors.firstName
-          }
-          break
-
-        case "lastName":
-          if (!(value ?? "").trim()) {
-            // Added nullish coalescing
-            newErrors.lastName = "Last name is required"
-          } else if ((value ?? "").trim().length < 2) {
-            newErrors.lastName = "Last name must be at least 2 characters"
-          } else {
-            delete newErrors.lastName
-          }
-          break
-
-        case "email":
-          const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-          if (!(value ?? "").trim()) {
-            // Added nullish coalescing
-            newErrors.email = "Email is required"
-          } else if (!emailRegex.test(value ?? "")) {
-            // Added nullish coalescing
-            newErrors.email = "Please enter a valid email address"
-          } else {
-            delete newErrors.email
-          }
-          break
-
-        case "selectedForm":
-          if (!value) {
-            newErrors.selectedForm = "Please select what you'd like to do"
-          } else {
-            delete newErrors.selectedForm
-          }
-          break
-      }
-
-      setErrors(newErrors)
-      return !newErrors[field]
-    },
-    [errors],
+export function useLeadValidation<T extends Record<string, any>>(initialData: T, validationSchema: ValidationRules) {
+  const [formData, setFormData] = useState<T>(initialData)
+  const [errors, setErrors] = useState<FormErrors>({})
+  const [isTouched, setIsTouched] = useState<Record<keyof T, boolean>>(
+    Object.keys(initialData).reduce((acc, key) => ({ ...acc, [key]: false }), {} as Record<keyof T, boolean>),
   )
 
-  const validateAll = useCallback((data: LeadData) => {
-    const newErrors: ValidationErrors = {}
+  const handleChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+      const { name, value, type, checked } = e.target as HTMLInputElement
+      setFormData((prevData) => ({
+        ...prevData,
+        [name]: type === "checkbox" ? checked : value,
+      }))
+      setIsTouched((prevTouched) => ({
+        ...prevTouched,
+        [name]: true,
+      }))
+    },
+    [],
+  )
 
-    // Added nullish coalescing to ensure data.firstName is a string before calling trim()
-    if (!(data.firstName ?? "").trim()) {
-      newErrors.firstName = "First name is required"
-    } else if ((data.firstName ?? "").trim().length < 2) {
-      newErrors.firstName = "First name must be at least 2 characters"
+  const handleSelectChange = useCallback((name: string, value: string | boolean) => {
+    setFormData((prevData) => ({
+      ...prevData,
+      [name]: value,
+    }))
+    setIsTouched((prevTouched) => ({
+      ...prevTouched,
+      [name]: true,
+    }))
+  }, [])
+
+  const validateForm = useCallback(() => {
+    let isValid = true
+    const newErrors: FormErrors = {}
+
+    for (const key in validationSchema) {
+      const value = formData[key]
+      const rules = validationSchema[key]
+      const error = validateField(value, rules)
+      newErrors[key] = error
+      if (error) {
+        isValid = false
+      }
     }
-
-    // Added nullish coalescing to ensure data.lastName is a string before calling trim()
-    if (!(data.lastName ?? "").trim()) {
-      newErrors.lastName = "Last name is required"
-    } else if ((data.lastName ?? "").trim().length < 2) {
-      newErrors.lastName = "Last name must be at least 2 characters"
-    }
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    // Added nullish coalescing to ensure data.email is a string before calling trim()
-    if (!(data.email ?? "").trim()) {
-      newErrors.email = "Email is required"
-    } else if (!emailRegex.test(data.email ?? "")) {
-      // Added nullish coalescing
-      newErrors.email = "Please enter a valid email address"
-    }
-
-    if (!data.selectedForm) {
-      newErrors.selectedForm = "Please select what you'd like to do"
-    }
-
     setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
-  }, [])
+    return isValid
+  }, [formData, validationSchema])
 
-  const clearErrors = useCallback(() => {
-    setErrors({})
-  }, [])
+  const validateFieldOnBlur = useCallback(
+    (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+      const { name, value, type, checked } = e.target as HTMLInputElement
+      const fieldRules = validationSchema[name]
+      if (fieldRules) {
+        const fieldValue = type === "checkbox" ? checked : value
+        const error = validateField(fieldValue, fieldRules)
+        setErrors((prevErrors) => ({
+          ...prevErrors,
+          [name]: error,
+        }))
+      }
+      setIsTouched((prevTouched) => ({
+        ...prevTouched,
+        [name]: true,
+      }))
+    },
+    [validationSchema],
+  )
 
-  const clearFieldError = useCallback((field: keyof ValidationErrors) => {
-    setErrors((prev) => {
-      const newErrors = { ...prev }
-      delete newErrors[field]
-      return newErrors
-    })
-  }, [])
+  // Validate all fields on initial load or when formData/validationSchema changes
+  useEffect(() => {
+    validateForm()
+  }, [formData, validationSchema, validateForm]) // Added validateForm to dependencies
 
   return {
+    formData,
+    setFormData,
     errors,
-    validateField,
-    validateAll,
-    clearErrors,
-    clearFieldError,
-    hasErrors: Object.keys(errors).length > 0,
+    handleChange,
+    handleSelectChange,
+    validateForm,
+    isTouched,
+    validateFieldOnBlur,
   }
 }

@@ -54,11 +54,23 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key-here
 
 ### 4. Development
 
+First, run the development server:
+
 \`\`\`bash
-npm run dev
+npm run dev          # Start development server
+# or
+yarn dev
+# or
+pnpm dev
+# or
+bun dev
 \`\`\`
 
-Visit `http://localhost:3000` to see your application.
+Visit [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+
+You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+
+This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
 
 ### 5. Deploy to Vercel
 

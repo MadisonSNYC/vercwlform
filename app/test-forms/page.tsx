@@ -14,6 +14,14 @@ import {
   Eye,
   EyeOff,
 } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import { Checkbox } from "@/components/ui/checkbox"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 interface TestResult {
   id: string
@@ -664,21 +672,21 @@ export default function FormTestingPage() {
               <p className="text-gray-600 mt-2">Comprehensive validation of all application forms</p>
             </div>
             <div className="flex items-center space-x-4">
-              <button
+              <Button
                 onClick={exportResults}
                 className="flex items-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
               >
                 <Download className="w-4 h-4 mr-2" />
                 Export Results
-              </button>
-              <button
+              </Button>
+              <Button
                 onClick={runAllTests}
                 disabled={isRunning}
                 className="flex items-center px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-blue-400 transition-colors"
               >
                 {isRunning ? <RefreshCw className="w-4 h-4 mr-2 animate-spin" /> : <Play className="w-4 h-4 mr-2" />}
                 {isRunning ? "Running Tests..." : "Run All Tests"}
-              </button>
+              </Button>
             </div>
           </div>
 
@@ -708,7 +716,7 @@ export default function FormTestingPage() {
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Test Viewport</h2>
           <div className="flex space-x-4">
             {Object.entries(viewportSizes).map(([viewport, size]) => (
-              <button
+              <Button
                 key={viewport}
                 onClick={() => setSelectedViewport(viewport as any)}
                 className={`flex items-center px-4 py-2 rounded-lg transition-colors ${
@@ -724,7 +732,7 @@ export default function FormTestingPage() {
                 <span className="ml-2 text-xs text-gray-500">
                   {size.width} × {size.height}
                 </span>
-              </button>
+              </Button>
             ))}
           </div>
         </div>
@@ -804,6 +812,109 @@ export default function FormTestingPage() {
               }}
               title="Form Preview"
             />
+          </div>
+        </div>
+
+        {/* Form Elements Preview */}
+        <div className="mt-8">
+          <h1 className="text-3xl font-bold mb-6">Form Elements Preview</h1>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {/* Text Input Card */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Text Input</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid w-full items-center gap-4">
+                  <div className="flex flex-col space-y-1.5">
+                    <Label htmlFor="name">Name</Label>
+                    <Input id="name" placeholder="Enter your name" />
+                  </div>
+                  <div className="flex flex-col space-y-1.5">
+                    <Label htmlFor="email">Email</Label>
+                    <Input id="email" type="email" placeholder="Enter your email" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Textarea Card */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Textarea</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid w-full items-center gap-4">
+                  <div className="flex flex-col space-y-1.5">
+                    <Label htmlFor="message">Message</Label>
+                    <Textarea id="message" placeholder="Type your message here." />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Checkbox Card */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Checkbox</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center space-x-2">
+                  <Checkbox id="terms" />
+                  <Label htmlFor="terms">Accept terms and conditions</Label>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Radio Group Card */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Radio Group</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <RadioGroup defaultValue="option-one">
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="option-one" id="option-one" />
+                    <Label htmlFor="option-one">Option One</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="option-two" id="option-two" />
+                    <Label htmlFor="option-two">Option Two</Label>
+                  </div>
+                </RadioGroup>
+              </CardContent>
+            </Card>
+
+            {/* Select Card */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Select</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Select>
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="Select a fruit" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="apple">Apple</SelectItem>
+                    <SelectItem value="banana">Banana</SelectItem>
+                    <SelectItem value="grape">Grape</SelectItem>
+                  </SelectContent>
+                </Select>
+              </CardContent>
+            </Card>
+
+            {/* Button Card */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Buttons</CardTitle>
+              </CardHeader>
+              <CardContent className="flex gap-2">
+                <Button>Primary Button</Button>
+                <Button variant="outline">Outline Button</Button>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </div>

@@ -1,162 +1,90 @@
-export interface PerformanceMetrics {
-  formLoadTime: number
-  firstInputDelay: number
-  formSubmissionTime: number
-  memoryUsage?: number
-  renderTime: number
+// components/test-utils/performance-monitor.ts
+
+/**
+ * Measures the time taken to execute a given function.
+ * @param func The function to measure.
+ * @returns The execution time in milliseconds.
+ */
+export function measureExecutionTime(func: Function): number {
+  const start = performance.now()
+  func()
+  const end = performance.now()
+  return end - start
 }
 
-export class PerformanceMonitor {
-  private startTime = 0
-  private metrics: Partial<PerformanceMetrics> = {}
+/**
+ * Monitors and logs various performance metrics for a web page.
+ * This is a simplified example. For more advanced monitoring, consider Web Vitals.
+ */
+export function monitorPagePerformance(): void {
+  if (typeof window === "undefined" || !window.performance) {
+    console.warn("Performance API not available in this environment.")
+    return
+  }
 
-  startMonitoring(): void {
-    this.startTime = performance.now()
-    this.metrics = {}
+  // Navigation Timing API
+  const navigationTiming = performance.getEntriesByType("navigation")[0] as PerformanceNavigationTiming
+  if (navigationTiming) {
+    console.log("--- Navigation Timing Metrics ---")
+    console.log(
+      `DOM Content Loaded: ${navigationTiming.domContentLoadedEventEnd - navigationTiming.domContentLoadedEventStart} ms`,
+    )
+    console.log(`Load Time: ${navigationTiming.loadEventEnd - navigationTiming.loadEventStart} ms`)
+    console.log(`Time to First Byte (TTFB): ${navigationTiming.responseStart - navigationTiming.requestStart} ms`)
+    console.log(
+      `First Contentful Paint (FCP) - (Approximation): ${navigationTiming.responseEnd - navigationTiming.fetchStart} ms`,
+    )
+  }
 
-    // Monitor form load time
-    if (document.readyState === "loading") {
-      document.addEventListener("DOMContentLoaded", () => {
-        this.metrics.formLoadTime = performance.now() - this.startTime
+  // Resource Timing API (e.g., for images, scripts, stylesheets)
+  const resources = performance.getEntriesByType("resource")
+  if (resources.length > 0) {
+    console.log("\n--- Resource Loading Metrics (Top 5 by duration) ---")
+    resources
+      .sort((a, b) => b.duration - a.duration)
+      .slice(0, 5)
+      .forEach((resource) => {
+        console.log(
+          `- ${resource.name.substring(0, 50)}... Type: ${resource.initiatorType}, Duration: ${resource.duration.toFixed(2)} ms`,
+        )
       })
-    } else {
-      this.metrics.formLoadTime = 0
-    }
-
-    // Monitor first input delay
-    this.monitorFirstInputDelay()
-
-    // Monitor memory usage if available
-    if ("memory" in performance) {
-      this.metrics.memoryUsage = (performance as any).memory.usedJSHeapSize
-    }
   }
 
-  private monitorFirstInputDelay(): void {
-    let firstInputProcessed = false
-
-    const handleFirstInput = (event: Event) => {
-      if (!firstInputProcessed) {
-        firstInputProcessed = true
-        this.metrics.firstInputDelay = performance.now() - (event as any).timeStamp
-
-        // Remove listeners after first input
-        document.removeEventListener("click", handleFirstInput, true)
-        document.removeEventListener("keydown", handleFirstInput, true)
-        document.removeEventListener("touchstart", handleFirstInput, true)
+  // Long Tasks API (if supported)
+  if ("PerformanceObserver" in window) {
+    const observer = new PerformanceObserver((list) => {
+      for (const entry of list.getEntries()) {
+        if (entry.entryType === "longtask") {
+          console.warn(`\n--- Long Task Detected ---`)
+          console.warn(
+            `Name: ${entry.name}, Duration: ${entry.duration.toFixed(2)} ms, Start Time: ${entry.startTime.toFixed(2)} ms`,
+          )
+          // You can add more details like attribution if available
+        }
       }
-    }
-
-    document.addEventListener("click", handleFirstInput, true)
-    document.addEventListener("keydown", handleFirstInput, true)
-    document.addEventListener("touchstart", handleFirstInput, true)
-  }
-
-  measureFormSubmission<T>(submitFunction: () => Promise<T>): Promise<T> {
-    const startTime = performance.now()
-
-    return submitFunction().finally(() => {
-      this.metrics.formSubmissionTime = performance.now() - startTime
     })
+    try {
+      observer.observe({ type: "longtask", buffered: true })
+    } catch (e) {
+      console.warn("Long Tasks API not fully supported or blocked.")
+    }
+  } else {
+    console.warn("PerformanceObserver (Long Tasks API) not supported in this browser.")
   }
 
-  measureRenderTime(renderFunction: () => void): number {
-    const startTime = performance.now()
-    renderFunction()
-    const endTime = performance.now()
+  console.log("\n--- General Performance Notes ---")
+  console.log("Consider using Lighthouse or Web Vitals for more comprehensive performance audits.")
+}
 
-    this.metrics.renderTime = endTime - startTime
-    return this.metrics.renderTime
-  }
-
-  getMetrics(): PerformanceMetrics {
-    return {
-      formLoadTime: this.metrics.formLoadTime || 0,
-      firstInputDelay: this.metrics.firstInputDelay || 0,
-      formSubmissionTime: this.metrics.formSubmissionTime || 0,
-      memoryUsage: this.metrics.memoryUsage,
-      renderTime: this.metrics.renderTime || 0,
-    }
-  }
-
-  generateReport(): string {
-    const metrics = this.getMetrics()
-
-    let report = "Performance Report:\n\n"
-
-    // Form Load Time
-    report += `Form Load Time: ${metrics.formLoadTime.toFixed(2)}ms `
-    if (metrics.formLoadTime > 1000) {
-      report += "⚠️ SLOW\n"
-    } else if (metrics.formLoadTime > 500) {
-      report += "⚡ MODERATE\n"
-    } else {
-      report += "✅ FAST\n"
-    }
-
-    // First Input Delay
-    report += `First Input Delay: ${metrics.firstInputDelay.toFixed(2)}ms `
-    if (metrics.firstInputDelay > 100) {
-      report += "⚠️ SLOW\n"
-    } else if (metrics.firstInputDelay > 50) {
-      report += "⚡ MODERATE\n"
-    } else {
-      report += "✅ FAST\n"
-    }
-
-    // Form Submission Time
-    if (metrics.formSubmissionTime > 0) {
-      report += `Form Submission Time: ${metrics.formSubmissionTime.toFixed(2)}ms `
-      if (metrics.formSubmissionTime > 3000) {
-        report += "⚠️ SLOW\n"
-      } else if (metrics.formSubmissionTime > 1000) {
-        report += "⚡ MODERATE\n"
-      } else {
-        report += "✅ FAST\n"
-      }
-    }
-
-    // Render Time
-    if (metrics.renderTime > 0) {
-      report += `Render Time: ${metrics.renderTime.toFixed(2)}ms `
-      if (metrics.renderTime > 16) {
-        report += "⚠️ MAY CAUSE JANK\n"
-      } else {
-        report += "✅ SMOOTH\n"
-      }
-    }
-
-    // Memory Usage
-    if (metrics.memoryUsage) {
-      const memoryMB = metrics.memoryUsage / (1024 * 1024)
-      report += `Memory Usage: ${memoryMB.toFixed(2)}MB `
-      if (memoryMB > 50) {
-        report += "⚠️ HIGH\n"
-      } else if (memoryMB > 20) {
-        report += "⚡ MODERATE\n"
-      } else {
-        report += "✅ LOW\n"
-      }
-    }
-
-    report += "\nRecommendations:\n"
-
-    if (metrics.formLoadTime > 1000) {
-      report += "• Optimize form initialization and reduce bundle size\n"
-    }
-
-    if (metrics.firstInputDelay > 100) {
-      report += "• Reduce JavaScript execution time during page load\n"
-    }
-
-    if (metrics.formSubmissionTime > 3000) {
-      report += "• Optimize form submission logic and server response time\n"
-    }
-
-    if (metrics.renderTime > 16) {
-      report += "• Optimize rendering performance to maintain 60fps\n"
-    }
-
-    return report
-  }
+/**
+ * Measures and logs the time taken for a specific UI render or update.
+ * This is a basic example. React DevTools Profiler is more suitable for React component profiling.
+ * @param name A name for the measurement.
+ * @param callback The function that triggers the UI render/update.
+ */
+export function measureUIRenderTime(name: string, callback: () => void): void {
+  const start = performance.now()
+  callback()
+  const end = performance.now()
+  console.log(`UI Render Time for "${name}": ${(end - start).toFixed(2)} ms`)
 }

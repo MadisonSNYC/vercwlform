@@ -1,132 +1,70 @@
-export interface ValidationRule {
-  field: string
-  type: "required" | "email" | "minLength" | "maxLength" | "pattern" | "custom"
-  value?: any
-  message: string
-  validator?: (value: any) => boolean
-}
+// components/test-utils/form-validator.ts
 
-export interface FormTestConfig {
-  formId: string
-  name: string
-  fields: ValidationRule[]
-  submitEndpoint?: string
-  requiredConsents?: string[]
-}
-
-export class FormValidator {
-  private config: FormTestConfig
-
-  constructor(config: FormTestConfig) {
-    this.config = config
+/**
+ * Validates a form field based on a set of rules.
+ * @param value The value of the field to validate.
+ * @param rules An object containing validation rules (e.g., { required: true, minLength: 5 }).
+ * @returns A string containing an error message if validation fails, otherwise null.
+ */
+export function validateField(
+  value: string | number | boolean | undefined | null,
+  rules: Record<string, any>,
+): string | null {
+  if (rules.required && (value === undefined || value === null || value === "")) {
+    return "This field is required."
   }
 
-  validateField(fieldName: string, value: any): { isValid: boolean; message?: string } {
-    const rule = this.config.fields.find((f) => f.field === fieldName)
-    if (!rule) return { isValid: true }
-
-    switch (rule.type) {
-      case "required":
-        if (!value || (typeof value === "string" && value.trim() === "")) {
-          return { isValid: false, message: rule.message }
-        }
-        break
-
-      case "email":
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-        if (value && !emailRegex.test(value)) {
-          return { isValid: false, message: rule.message }
-        }
-        break
-
-      case "minLength":
-        if (value && value.length < rule.value) {
-          return { isValid: false, message: rule.message }
-        }
-        break
-
-      case "maxLength":
-        if (value && value.length > rule.value) {
-          return { isValid: false, message: rule.message }
-        }
-        break
-
-      case "pattern":
-        if (value && !rule.value.test(value)) {
-          return { isValid: false, message: rule.message }
-        }
-        break
-
-      case "custom":
-        if (rule.validator && value && !rule.validator(value)) {
-          return { isValid: false, message: rule.message }
-        }
-        break
+  if (typeof value === "string") {
+    if (rules.minLength && value.length < rules.minLength) {
+      return `Must be at least ${rules.minLength} characters long.`
     }
-
-    return { isValid: true }
-  }
-
-  validateForm(formData: Record<string, any>): { isValid: boolean; errors: Record<string, string> } {
-    const errors: Record<string, string> = {}
-
-    for (const rule of this.config.fields) {
-      const result = this.validateField(rule.field, formData[rule.field])
-      if (!result.isValid && result.message) {
-        errors[rule.field] = result.message
-      }
+    if (rules.maxLength && value.length > rules.maxLength) {
+      return `Must be no more than ${rules.maxLength} characters long.`
     }
-
-    // Check required consents
-    if (this.config.requiredConsents) {
-      for (const consent of this.config.requiredConsents) {
-        if (!formData[consent]) {
-          errors[consent] = `${consent} is required`
-        }
-      }
+    if (rules.pattern && !new RegExp(rules.pattern).test(value)) {
+      return rules.patternMessage || "Invalid format."
     }
-
-    return {
-      isValid: Object.keys(errors).length === 0,
-      errors,
+    if (rules.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+      return "Invalid email address."
     }
   }
+
+  if (typeof value === "number") {
+    if (rules.min && value < rules.min) {
+      return `Must be at least ${rules.min}.`
+    }
+    if (rules.max && value > rules.max) {
+      return `Must be no more than ${rules.max}.`
+    }
+  }
+
+  if (rules.checked && typeof value === "boolean" && !value) {
+    return "Must be checked."
+  }
+
+  return null
 }
 
-// Predefined form configurations
-export const FORM_CONFIGS: FormTestConfig[] = [
-  {
-    formId: "lead-capture",
-    name: "Lead Capture Form",
-    fields: [
-      { field: "firstName", type: "required", message: "First name is required" },
-      { field: "lastName", type: "required", message: "Last name is required" },
-      { field: "email", type: "required", message: "Email is required" },
-      { field: "email", type: "email", message: "Please enter a valid email address" },
-      { field: "selectedForm", type: "required", message: "Please select what you'd like to do" },
-    ],
-    requiredConsents: ["mailingListConsent"],
-  },
-  {
-    formId: "waitlist",
-    name: "Waitlist Form",
-    fields: [
-      { field: "email", type: "required", message: "Email is required" },
-      { field: "email", type: "email", message: "Please enter a valid email address" },
-    ],
-  },
-  {
-    formId: "report",
-    name: "Full Report Form",
-    fields: [
-      { field: "firstName", type: "required", message: "First name is required" },
-      { field: "lastName", type: "required", message: "Last name is required" },
-      { field: "email", type: "required", message: "Email is required" },
-      { field: "email", type: "email", message: "Please enter a valid email address" },
-      { field: "narrative", type: "required", message: "Please describe what happened" },
-      { field: "desiredOutcome", type: "required", message: "Desired outcome is required" },
-      { field: "referralSource", type: "required", message: "Please tell us how you heard about us" },
-    ],
-    requiredConsents: ["dcwpConsent", "proxyConsent", "mailingListConsent"],
-  },
-]
+/**
+ * Validates an entire form by iterating through its fields and applying validation rules.
+ * @param formData An object where keys are field names and values are field values.
+ * @param validationSchema An object where keys are field names and values are validation rule objects.
+ * @returns An object containing error messages for each invalid field, or an empty object if the form is valid.
+ */
+export function validateForm(
+  formData: Record<string, any>,
+  validationSchema: Record<string, Record<string, any>>,
+): Record<string, string> {
+  const errors: Record<string, string> = {}
+
+  for (const fieldName in validationSchema) {
+    const rules = validationSchema[fieldName]
+    const value = formData[fieldName]
+    const error = validateField(value, rules)
+    if (error) {
+      errors[fieldName] = error
+    }
+  }
+
+  return errors
+}

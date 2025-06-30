@@ -1,7 +1,9 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr"
-import type { cookies } from "next/headers"
+import { cookies } from "next/headers"
 
-export function createClient(cookieStore: ReturnType<typeof cookies>) {
+export function createClient() {
+  const cookieStore = cookies()
+
   return createServerClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, {
     cookies: {
       get(name: string) {
@@ -12,7 +14,7 @@ export function createClient(cookieStore: ReturnType<typeof cookies>) {
           cookieStore.set({ name, value, ...options })
         } catch (error) {
           // The `cookies().set()` method can only be called in a Server Action or Route Handler
-          // This error is typically not an issue if you're just reading cookies
+          // https://nextjs.org/docs/app/api-reference/functions/cookies#cookiessetname-value-options
         }
       },
       remove(name: string, options: CookieOptions) {
@@ -20,7 +22,7 @@ export function createClient(cookieStore: ReturnType<typeof cookies>) {
           cookieStore.set({ name, value: "", ...options })
         } catch (error) {
           // The `cookies().set()` method can only be called in a Server Action or Route Handler
-          // This error is typically not an issue if you're just reading cookies
+          // https://nextjs.org/docs/app/api-reference/functions/cookies#cookiessetname-value-options
         }
       },
     },
