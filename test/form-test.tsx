@@ -2,6 +2,7 @@
 import { render, screen, fireEvent, waitFor } from "@testing-library/react"
 import "@testing-library/jest-dom"
 import FormTest from "./form-test" // Adjust path as necessary
+import { describe, it, expect } from "@jest/globals" // Import describe, it, and expect
 
 // Test data for different scenarios
 const testScenarios = {
@@ -40,7 +41,7 @@ const testScenarios = {
       brokerageName: "XYZ Properties",
       violations: ["Bait-and-Switch Listing", "High-Pressure Sales Tactics", "Other"],
       violationOtherTexts: {
-        "listing-Other": "Fake photos showing different apartment",
+        "listing-look": "Fake photos showing different apartment",
         "agent-landlord-behavior-Other": "Threatened to show apartment to others if I didn't sign immediately",
       },
       feeCharges: ["Security Deposit &gt; 1 month rent", "Good Faith Deposit", "Other"],
