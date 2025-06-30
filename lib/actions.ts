@@ -1,222 +1,161 @@
 "use server"
 
-import { createClient } from "@/lib/supabase/server"
 import { revalidatePath } from "next/cache"
+import { redirect } from "next/navigation"
 
-export async function submitFareReport(prevState: any, formData: FormData) {
+import { createClient } from "@/lib/supabase/server"
+
+export async function signIn(formData: FormData) {
+  const email = formData.get("email") as string
+  const password = formData.get("password") as string
   const supabase = createClient()
 
-  const formType = formData.get("formType") as string
-  const email = formData.get("email") as string
-  const firstName = formData.get("firstName") as string
-  const lastName = formData.get("lastName") as string
-  const phone = formData.get("phone") as string
-  const mailingListConsent = formData.get("mailingListConsent") === "on"
+  const { error } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  })
 
-  if (formType === "waitlist") {
-    const { data, error } = await supabase
-      .from("waitlist_entries")
-      .insert([
-        {
-          email,
-          first_name: firstName,
-          last_name: lastName,
-          phone,
-          mailing_list_consent: mailingListConsent,
-        },
-      ])
-      .select()
-
-    if (error) {
-      console.error("Error inserting waitlist entry:", error)
-      return { error: "Failed to join waitlist. Please try again." }
-    }
-
-    revalidatePath("/")
-    return { success: "Successfully joined the waitlist! We will keep you updated." }
-  } else if (formType === "report") {
-    const hasStreetEasyListing = formData.get("hasStreetEasyListing") === "on"
-    const streetEasyLink = formData.get("streetEasyLink") as string
-    const manualAddress = formData.get("manualAddress") as string
-    const manualPrice = formData.get("manualPrice") as string
-    const manualUnit = formData.get("manualUnit") as string
-    const manualBedrooms = formData.get("manualBedrooms") as string
-    const manualBathrooms = formData.get("manualBathrooms") as string
-    const borough = formData.get("borough") as string
-    const neighborhood = formData.get("neighborhood") as string
-
-    const whoReporting = formData.get("whoReporting") as string
-    const managementCompanyName = formData.get("landlordCompany") as string
-    const agentFirstName = formData.get("brokerName")?.split(" ")[0] as string
-    const agentLastName = formData.get("brokerName")?.split(" ")[1] as string
-    const brokerageName = formData.get("brokerageName") as string
-    const brokerageForAgent = formData.get("brokerCompany") as string
-    const businessAddress = formData.get("businessAddress") as string
-    const businessPhone = formData.get("businessPhone") as string
-    const businessEmail = formData.get("businessEmail") as string
-    const businessWebsite = formData.get("businessWebsite") as string
-    const businessLicense = formData.get("businessLicense") as string
-
-    const contactedBusiness = formData.get("contactedBusiness") === "on"
-    const employeeName = formData.get("employeeName") as string
-    const whatHappened = formData.get("whatHappened") as string
-    const outcome = formData.get("outcome") as string
-
-    const violations: string[] = []
-    for (const [key, value] of formData.entries()) {
-      if (key.startsWith("violation_") && value === "on") {
-        violations.push(key.replace("violation_", ""))
-      }
-    }
-    const violationOtherTexts: Record<string, string> = {}
-    for (const [key, value] of formData.entries()) {
-      if (key.startsWith("violationOther_")) {
-        violationOtherTexts[key.replace("violationOther_", "")] = value as string
-      }
-    }
-
-    const illegalBrokerFeeCharged = formData.get("illegalBrokerFeeCharged") === "on"
-    const requirementToUseBroker = formData.get("requirementToUseBroker") === "on"
-    const feesNotDisclosed = formData.get("feesNotDisclosed") === "on"
-    const feesNotDisclosedText = formData.get("feesNotDisclosedText") as string
-    const improperFeesInAd = formData.get("improperFeesInAd") === "on"
-    const improperFeesInAdUrl = formData.get("improperFeesInAdUrl") as string
-
-    const feeCharges: string[] = formData.getAll("feeCharge") as string[]
-    const feeChargesOther = formData.get("feeChargesOther") as string
-
-    const narrative = formData.get("narrative") as string
-    const additionalNotes = formData.get("additionalContext") as string
-    const desiredOutcome = formData.getAll("desiredOutcome") as string[]
-    const desiredOutcomeOther = formData.get("desiredOutcomeOther") as string
-    const referralSource = formData.get("referralSource") as string
-    const referralSourceOther = formData.get("referralSourceOther") as string
-
-    const aiRefinementOption = formData.get("aiRefinementOption") as string
-    const reportDescription = formData.get("reportDescription") as string
-
-    const userEmail = formData.get("email") as string
-    const userPhone = formData.get("phone") as string
-    const preferredContact = formData.get("preferredContact") as string
-    const isVeteran = formData.get("isVeteran") === "on"
-
-    const resendReportToMe = formData.get("resendReportToMe") === "on"
-    const dcwpConsent = formData.get("dcwpConsent") === "on"
-    const proxyConsent = formData.get("proxyConsent") === "on"
-
-    const { data, error } = await supabase
-      .from("reports")
-      .insert([
-        {
-          first_name: firstName,
-          last_name: lastName,
-          email: userEmail,
-          phone: userPhone,
-          preferred_contact: preferredContact,
-          is_veteran: isVeteran,
-          referral_source: referralSource,
-          referral_source_other: referralSourceOther,
-          mailing_list_consent: mailingListConsent,
-          property_info_type: hasStreetEasyListing ? "streeteasy" : "manual",
-          streeteasy_link: streetEasyLink,
-          manual_address: manualAddress,
-          manual_price: manualPrice,
-          manual_unit: manualUnit,
-          manual_bedrooms: manualBedrooms,
-          manual_bathrooms: manualBathrooms,
-          borough: borough,
-          neighborhood: neighborhood,
-          who_reporting: whoReporting,
-          management_company_name: managementCompanyName,
-          agent_first_name: agentFirstName,
-          agent_last_name: agentLastName,
-          brokerage_name: brokerageName,
-          brokerage_for_agent: brokerageForAgent,
-          business_address: businessAddress,
-          business_phone: businessPhone,
-          business_email: businessEmail,
-          business_website: businessWebsite,
-          business_license: businessLicense,
-          contacted_business: contactedBusiness,
-          employee_name: employeeName,
-          what_happened: whatHappened,
-          outcome: outcome,
-          outcome_chips: outcome.split(",").map((s) => s.trim()), // Assuming outcome is comma-separated string
-          outcome_other_text: formData.get("outcomeOtherText") as string,
-          violations: violations,
-          violation_other_texts: violationOtherTexts,
-          illegal_broker_fee_charged: illegalBrokerFeeCharged,
-          requirement_to_use_broker: requirementToUseBroker,
-          fees_not_disclosed: feesNotDisclosed,
-          fees_not_disclosed_text: feesNotDisclosedText,
-          improper_fees_in_ad: improperFeesInAd,
-          improper_fees_in_ad_url: improperFeesInAdUrl,
-          fee_charges: feeCharges,
-          fee_charges_other: feeChargesOther,
-          ai_refinement_option: aiRefinementOption,
-          report_description: reportDescription,
-          narrative: narrative,
-          additional_notes: additionalNotes,
-          desired_outcome: desiredOutcome,
-          desired_outcome_other: desiredOutcomeOther,
-          resend_report_to_me: resendReportToMe,
-          dcwp_consent: dcwpConsent,
-          proxy_consent: proxyConsent,
-        },
-      ])
-      .select()
-
-    if (error) {
-      console.error("Error inserting report:", error)
-      return { error: "Failed to submit report. Please try again." }
-    }
-
-    revalidatePath("/")
-    return { success: "Your report has been submitted successfully! Thank you for your contribution." }
-  } else if (formType === "schedule") {
-    const contactTime = formData.get("contactTime") as string
-    const issueSnapshot = formData.get("issueSnapshot") as string
-
-    const { data, error } = await supabase
-      .from("scheduled_reports")
-      .insert([
-        {
-          email,
-          first_name: firstName,
-          last_name: lastName,
-          phone,
-          mailing_list_consent: mailingListConsent,
-          best_time_to_reach_you: contactTime,
-          brief_issue_snapshot: issueSnapshot,
-        },
-      ])
-      .select()
-
-    if (error) {
-      console.error("Error inserting scheduled report:", error)
-      return { error: "Failed to schedule report. Please try again." }
-    }
-
-    revalidatePath("/")
-    return { success: "Your report scheduling request has been received. We will contact you shortly!" }
+  if (error) {
+    return redirect("/login?message=Could not authenticate user")
   }
 
-  return { error: "Invalid form type." }
+  return redirect("/protected")
 }
 
-export async function testDatabaseConnection() {
+export async function signUp(formData: FormData) {
+  const origin = headers().get("origin")
+  const email = formData.get("email") as string
+  const password = formData.get("password") as string
   const supabase = createClient()
-  try {
-    const { data, error } = await supabase.from("reports").select("id").limit(1)
 
-    if (error) {
-      console.error("Supabase connection test failed:", error)
-      return { success: false, message: `Connection failed: ${error.message}` }
-    }
+  const { error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      emailRedirectTo: `${origin}/auth/callback`,
+    },
+  })
 
-    return { success: true, message: "Supabase connection successful!" }
-  } catch (e: any) {
-    console.error("Supabase connection test failed (exception):", e)
-    return { success: false, message: `Connection failed: ${e.message}` }
+  if (error) {
+    return redirect("/login?message=Could not authenticate user")
   }
+
+  return redirect("/login?message=Check email to continue sign in process")
+}
+
+export async function signOut() {
+  const supabase = createClient()
+  await supabase.auth.signOut()
+  return redirect("/login")
+}
+
+import { headers } from "next/headers"
+
+export async function submitLeadForm(formData: FormData) {
+  const supabase = createClient()
+
+  const formType = formData.get("form_type") as string
+  const email = formData.get("email") as string
+  const firstName = formData.get("first_name") as string
+  const lastName = formData.get("last_name") as string
+  const phone = formData.get("phone") as string
+  const contactTime = formData.get("contact_time") as string
+  const issueSnapshot = formData.get("issue_snapshot") as string
+  const mailingListConsent = formData.get("mailing_list_consent") === "on"
+
+  const { data, error } = await supabase.from("leads").insert([
+    {
+      form_type: formType,
+      email,
+      first_name: firstName,
+      last_name: lastName,
+      phone,
+      contact_time: contactTime,
+      issue_snapshot: issueSnapshot,
+      mailing_list_consent: mailingListConsent,
+    },
+  ])
+
+  if (error) {
+    console.error("Error submitting lead form:", error)
+    return { success: false, message: "Failed to submit form. Please try again." }
+  }
+
+  revalidatePath("/")
+  return { success: true, message: "Form submitted successfully!" }
+}
+
+export async function submitReportForm(formData: FormData) {
+  const supabase = createClient()
+
+  const reportData = {
+    first_name: formData.get("first_name") as string,
+    last_name: formData.get("last_name") as string,
+    email: formData.get("email") as string,
+    phone: formData.get("phone") as string,
+    preferred_contact: formData.get("preferred_contact") as string,
+    is_veteran: formData.get("is_veteran") === "on",
+
+    has_streeteasy_listing: formData.get("has_streeteasy_listing") === "on",
+    streeteasy_link: formData.get("streeteasy_link") as string,
+    manual_address: formData.get("manual_address") as string,
+    manual_price: formData.get("manual_price") as string,
+    manual_unit: formData.get("manual_unit") as string,
+    manual_bedrooms: formData.get("manual_bedrooms") as string,
+    manual_bathrooms: formData.get("manual_bathrooms") as string,
+    borough: formData.get("borough") as string,
+    neighborhood: formData.get("neighborhood") as string,
+
+    landlord_name: formData.get("landlord_name") as string,
+    landlord_company: formData.get("landlord_company") as string,
+    broker_name: formData.get("broker_name") as string,
+    broker_company: formData.get("broker_company") as string,
+    brokerage_name: formData.get("brokerage_name") as string,
+    business_address: formData.get("business_address") as string,
+
+    contacted_business: formData.get("contacted_business") === "on",
+    employee_name: formData.get("employee_name") as string,
+    what_happened: formData.get("what_happened") as string,
+    outcome: formData.get("outcome") as string,
+
+    violations: JSON.parse((formData.get("violations") as string) || "[]"),
+    violation_others: JSON.parse((formData.get("violation_others") as string) || "[]"),
+
+    illegal_broker_fee_charged: formData.get("illegal_broker_fee_charged") === "on",
+    requirement_to_use_broker: formData.get("requirement_to_use_broker") === "on",
+    fees_not_disclosed: formData.get("fees_not_disclosed") === "on",
+    fees_not_disclosed_text: formData.get("fees_not_disclosed_text") as string,
+    improper_fees_in_ad: formData.get("improper_fees_in_ad") === "on",
+    improper_fees_in_ad_url: formData.get("improper_fees_in_ad_url") as string,
+
+    fee_charges: JSON.parse((formData.get("fee_charges") as string) || "[]"),
+    fee_charges_other: formData.get("fee_charges_other") as string,
+
+    narrative: formData.get("narrative") as string,
+    additional_context: formData.get("additional_context") as string,
+    desired_outcome_array: JSON.parse((formData.get("desired_outcome_array") as string) || "[]"),
+    desired_outcome_other: formData.get("desired_outcome_other") as string,
+
+    ai_refinement_option: formData.get("ai_refinement_option") as string,
+    report_description: formData.get("report_description") as string,
+
+    referral_source: formData.get("referral_source") as string,
+    referral_source_other: formData.get("referral_source_other") as string,
+
+    dcwp_consent: formData.get("dcwp_consent") === "on",
+    proxy_consent: formData.get("proxy_consent") === "on",
+    mailing_list_consent: formData.get("mailing_list_consent") === "on",
+
+    document_info: JSON.parse((formData.get("document_info") as string) || "[]"),
+  }
+
+  const { data, error } = await supabase.from("reports").insert([reportData])
+
+  if (error) {
+    console.error("Error submitting report form:", error)
+    return { success: false, message: "Failed to submit report. Please try again." }
+  }
+
+  revalidatePath("/")
+  return { success: true, message: "Report submitted successfully!" }
 }
