@@ -152,3 +152,131 @@ export async function submitReport(formData: ReportFormData) {
 
   return { success: true, message: "Report submitted successfully!" }
 }
+
+// Server action that handles FormData from forms
+export async function submitFareReport(prevState: any, formData: FormData) {
+  try {
+    const formType = formData.get("formType") as string
+
+    if (formType === "waitlist") {
+      const leadData: LeadFormData = {
+        email: formData.get("email") as string,
+        firstName: formData.get("firstName") as string,
+        lastName: formData.get("lastName") as string,
+        phone: formData.get("phone") as string,
+        formType: "waitlist",
+        mailingListConsent: formData.get("mailingListConsent") === "on",
+      }
+
+      const result = await submitLead(leadData)
+      if (result.success) {
+        return { success: "Thank you for joining our waitlist! We'll keep you updated on our progress." }
+      } else {
+        return { error: result.message }
+      }
+    }
+
+    if (formType === "schedule") {
+      const leadData: LeadFormData = {
+        email: formData.get("email") as string,
+        firstName: formData.get("firstName") as string,
+        lastName: formData.get("lastName") as string,
+        phone: formData.get("phone") as string,
+        formType: "schedule",
+        contactTime: formData.get("contactTime") as string,
+        issueSnapshot: formData.get("issueSnapshot") as string,
+        mailingListConsent: formData.get("mailingListConsent") === "on",
+      }
+
+      const result = await submitLead(leadData)
+      if (result.success) {
+        return { success: "Thank you! We'll reach out to schedule your test session." }
+      } else {
+        return { error: result.message }
+      }
+    }
+
+    if (formType === "report") {
+      const reportData: ReportFormData = {
+        email: formData.get("email") as string,
+        firstName: formData.get("firstName") as string,
+        lastName: formData.get("lastName") as string,
+        phone: formData.get("phone") as string,
+        preferredContact: formData.get("preferredContact") as string,
+        isVeteran: formData.get("isVeteran") === "on",
+        hasStreeteasyListing: formData.get("hasStreetEasyListing") === "on",
+        streeteasyLink: formData.get("streetEasyLink") as string,
+        manualAddress: formData.get("manualAddress") as string,
+        manualPrice: formData.get("manualPrice") as string,
+        manualUnit: formData.get("manualUnit") as string,
+        manualBedrooms: formData.get("manualBedrooms") as string,
+        manualBathrooms: formData.get("manualBathrooms") as string,
+        borough: formData.get("borough") as string,
+        neighborhood: formData.get("neighborhood") as string,
+        landlordName: formData.get("landlordName") as string,
+        landlordCompany: formData.get("landlordCompany") as string,
+        brokerName: formData.get("brokerName") as string,
+        brokerCompany: formData.get("brokerCompany") as string,
+        brokerageName: formData.get("brokerageName") as string,
+        businessAddress: formData.get("businessAddress") as string,
+        contactedBusiness: formData.get("contactedBusiness") === "on",
+        employeeName: formData.get("employeeName") as string,
+        whatHappened: formData.get("whatHappened") as string,
+        outcome: formData.get("outcome") as string,
+        violations: JSON.parse((formData.get("violations") as string) || "[]"),
+        violationOthers: JSON.parse((formData.get("violation_others") as string) || "[]"),
+        illegalBrokerFeeCharged: formData.get("illegalBrokerFeeCharged") === "on",
+        requirementToUseBroker: formData.get("requirementToUseBroker") === "on",
+        feesNotDisclosed: formData.get("feesNotDisclosed") === "on",
+        feesNotDisclosedText: formData.get("feesNotDisclosedText") as string,
+        improperFeesInAd: formData.get("improperFeesInAd") === "on",
+        improperFeesInAdUrl: formData.get("improperFeesInAdUrl") as string,
+        feeCharges: JSON.parse((formData.get("fee_charges") as string) || "[]"),
+        feeChargesOther: formData.get("fee_charges_other") as string,
+        narrative: formData.get("narrative") as string,
+        additionalContext: formData.get("additionalContext") as string,
+        desiredOutcomeArray: JSON.parse((formData.get("desired_outcome_array") as string) || "[]"),
+        desiredOutcomeOther: formData.get("desired_outcome_other") as string,
+        aiRefinementOption: formData.get("aiRefinementOption") as string,
+        reportDescription: formData.get("reportDescription") as string,
+        referralSource: formData.get("referralSource") as string,
+        referralSourceOther: formData.get("referralSourceOther") as string,
+        dcwpConsent: formData.get("dcwpConsent") === "on",
+        proxyConsent: formData.get("proxyConsent") === "on",
+        mailingListConsent: formData.get("mailingListConsent") === "on",
+        documentInfo: JSON.parse((formData.get("document_info") as string) || "[]"),
+      }
+
+      const result = await submitReport(reportData)
+      if (result.success) {
+        return { success: "Thank you for your report! We've received your submission and will process it shortly." }
+      } else {
+        return { error: result.message }
+      }
+    }
+
+    return { error: "Invalid form type" }
+  } catch (error) {
+    console.error("Error in submitFareReport:", error)
+    return { error: "An unexpected error occurred. Please try again." }
+  }
+}
+
+// Legacy function for direct form submissions
+export async function submitLeadForm(formData: FormData) {
+  try {
+    const leadData: LeadFormData = {
+      email: formData.get("email") as string,
+      firstName: formData.get("first_name") as string,
+      lastName: formData.get("last_name") as string,
+      phone: formData.get("phone") as string,
+      formType: formData.get("form_type") as "waitlist" | "schedule" | "report",
+      mailingListConsent: true, // Assume consent for legacy forms
+    }
+
+    return await submitLead(leadData)
+  } catch (error) {
+    console.error("Error in submitLeadForm:", error)
+    return { success: false, message: "An unexpected error occurred. Please try again." }
+  }
+}
